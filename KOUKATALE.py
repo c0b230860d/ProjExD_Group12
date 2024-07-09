@@ -886,27 +886,59 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 
 
-class SideWall(pg.sprite.Sprite):
+class SideBeamFake(pg.sprite.Sprite):
     """
-    横から障害物が出てくるクラス
+    予告ビームが出てくるクラス
     """
     def __init__(self, start_pos: tuple[int, int]):
         """
-        障害物の初期化
+        予告ビームの初期化
+        start_pos：スタート位置
+        """
+        super().__init__()
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        self.tmr = 0
+
+    def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが0~20, 40~60, 80~100,,,の間、予告ビームを表示する
+        """
+        self.tmr += 1
+        screen.blit(self.image, self.rect)
+        if self.tmr == 20 or reset:
+            self.kill() 
+
+class SideWallReal(pg.sprite.Sprite):
+    """
+    横からビームが出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        横からビームの初期化
+        start_pos：スタート位置
         """
         super().__init__()
 
         self.image = pg.Surface((300, 100), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 255), (0, 0, 300, 100))
         self.rect = self.image.get_rect()
-        self.rect.center = start_pos 
+        self.rect.center = start_pos
 
         self.tmr = 0
 
     def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが40~60, 80~100,,,の間、表示できるようにする
+        """
         self.tmr += 1
-        screen.blit(self.image, self.rect)
-        if self.tmr == 12 or reset:
+        if 1 <= self.tmr < 21:
+            screen.blit(self.image, self.rect)
+        elif self.tmr == 21 or reset:
             self.kill() 
 
 
@@ -958,7 +990,8 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
-    sidewall = pg.sprite.Group()
+    sidebeamr = pg.sprite.Group()
+    sidebeamf = pg.sprite.Group()
 
     """
     以下それぞれのシーンのタイマーを用意
@@ -1215,6 +1248,9 @@ def main():
                     """
                     以下は攻撃の描画を行う例である。
                     """
+                    """
+                    予告ビームと横からビームの作成
+                    """
                     # 落単ビームの発生
                     if attack_tmr % 9 == 0:  # 一定時間ごとにビームを生成
                         start_pos = (random.randint(WIDTH/2-100,WIDTH/2+100), 40)
@@ -1232,23 +1268,29 @@ def main():
                     """
                     以下に各自攻撃の処理を行う
                     """
-                    # 横からビームの作成
-                    if attack_tmr % 12 == 0:  # 一定時間ごとに障害物を生成
+                    # 横からビームの発生
+                    if attack_tmr % 40 == 0:  # 一定時間ごとにビームを生成
                         start_pos = (WIDTH/2, random.choice([HEIGHT/2, HEIGHT/2+100, HEIGHT/2+200]))
-                        sidewall.add(SideWall(start_pos))
-                    # 落単との衝突判定
-                    if len(pg.sprite.spritecollide(heart, sidewall, False)) != 0:
+                        # 予告ビームの表示
+                        sidebeamf.add(SideBeamFake(start_pos))
+                    elif attack_tmr % 40 == 39:
+                        # 横からビームの表示
+                        sidebeamr.add(SideWallReal(start_pos))
+                    # ビームとの衝突判定
+                    if len(pg.sprite.spritecollide(heart, sidebeamr, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 3:
+                            if hp.hp < 4:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 3
+                                hp.hp -= 4
                             heart.invincible = True
 
                 """
                 クラスの更新を行う
                 """
                 # 以下に攻撃に関するクラスの更新
+                
+                sidebeamf.update(screen)
 
                 kkton.update(screen)
                 key_lst = pg.key.get_pressed()
@@ -1257,7 +1299,8 @@ def main():
                 choice.draw(screen, True)
                 hp.update()
                 rakutan.update(screen)
-                sidewall.update(screen) 
+                sidebeamr.update(screen) 
+                
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1266,7 +1309,8 @@ def main():
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
-                    sidewall.update(screen, True)
+                    sidebeamr.update(screen, True)
+                    sidebeamf.update(screen, True)
                     gameschange = 0
                     select_tmr = 0
                 attack_tmr += 1
