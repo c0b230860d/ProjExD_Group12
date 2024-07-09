@@ -901,7 +901,7 @@ def main():
     heart = Heart((WIDTH/2, HEIGHT/2+100 ))
     # heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
     dialog = Dialogue()
-    gpa = random.uniform(1, 4)
+    gpa = random.uniform(2, 4)
     max_hp = int(gpa*20)
     hp = HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
     en_max_hp = 7957
@@ -1203,7 +1203,7 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                if attack_rand == 1:
+                elif attack_rand == 1:
                     """
                     以下に各自攻撃の処理を行う
                     """
