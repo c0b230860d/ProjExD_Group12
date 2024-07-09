@@ -938,7 +938,7 @@ class SideWallReal(pg.sprite.Sprite):
         self.tmr += 1
         if 1 <= self.tmr < 21:
             screen.blit(self.image, self.rect)
-        elif self.tmr == 21 or reset:
+        if self.tmr == 21 or reset:
             self.kill() 
 
 
@@ -1427,6 +1427,9 @@ def main():
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
                 # beams.update(screen, True)
                 # barrages.update(True)
+                sidebeamr.update(screen, True)
+                sidebeamf.update(screen, True)
+                rakutan.update(screen, True)
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
@@ -1436,6 +1439,7 @@ def main():
                 sound.play(-1)
                 gameschange = 0
                 scenechange = 1
+                
             gameover_tmr += 1
             
 
