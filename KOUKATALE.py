@@ -855,7 +855,6 @@ class AttackRakutan(pg.sprite.Sprite):
     def __init__(self, color: tuple[int, int, int],start_pos: tuple[int, int]):
         """
         引数に基づき攻撃Surfaceを生成する
-        color：色
         start_pos：スタート位置
         """
         super().__init__()
@@ -866,7 +865,7 @@ class AttackRakutan(pg.sprite.Sprite):
         self.frct = self.label.get_rect()
         self.frct.center = start_pos
 
-        self.image = pg.Surface((100, 20), pg.SRCALPHA)
+        self.image = pg.Surface((100, 20))
         pg.draw.rect(self.image, color, (0, 0, 100, 20))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos        
@@ -884,8 +883,40 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 うえの例をもとに以下にこうかとんが攻撃する内容についてのクラスを各自用意する
 """
+class DreamEgg(pg.sprite.Sprite):
+    """
+    こうかとんの卵攻撃に関するクラス
+    """
+    def __init__(self, kkton: "Koukaton", heart: "Heart", angle = 0):
+        super().__init__()
+        rad = 10
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (255, 255, 255)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
 
+        self.rect.centerx = kkton.rect.centerx-40 # バッグから出ているように調整
+        self.rect.centery = kkton.rect.centery+kkton.rect.height//2-40
+        
+        kkton.rect.x = random.randint(WIDTH/2-50, WIDTH/2+50)
+        self.vx, self.vy = calc_orientation(kkton.rect, heart.rect)
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        
+        self.speed = 10
 
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        DreamEggの描画
+        """
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        screen.blit(self.image, self.rect)
+        if check_bound1(self.rect) != (True, True) or reset:
+            self.kill()
+
+    
 def main():
     pg.display.set_caption("koukAtale")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -934,6 +965,7 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
+    dream_egg = pg.sprite.Group()
 
     """
     以下それぞれのシーンのタイマーを用意
@@ -1148,6 +1180,10 @@ def main():
                 choice.draw(screen)  # 選択肢の更新
 
             elif gameschange == 2:  # アタックバー画面
+                if en_hp.hp <= 0: # 敵の体力が0になったら
+                    sound.stop()
+                    scenechange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんの表示
                 if atk:  # atkが有効かされたら 
@@ -1191,7 +1227,7 @@ def main():
                     以下は攻撃の描画を行う例である。
                     """
                     # 落単ビームの発生
-                    if attack_tmr % 9 == 0:  # 一定時間ごとにビームを生成
+                    if attack_tmr % 11 == 0:  # 一定時間ごとにビームを生成
                         start_pos = (random.randint(WIDTH/2-100,WIDTH/2+100), 40)
                         rakutan.add(AttackRakutan((255, 255, 255), start_pos))
                     # 落単との衝突判定
@@ -1207,8 +1243,16 @@ def main():
                     """
                     以下に各自攻撃の処理を行う
                     """
-                    pass
-
+                    if attack_tmr % 4 == 0:
+                        # pass
+                        dream_egg.add(DreamEgg(kkton, heart))
+                    if len(pg.sprite.spritecollide(heart, dream_egg, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 1
+                            heart.invincible = True
                 """
                 クラスの更新を行う
                 """
@@ -1221,6 +1265,8 @@ def main():
                 choice.draw(screen, True)
                 hp.update()
                 rakutan.update(screen) 
+                dream_egg.update(screen)
+                
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1229,6 +1275,8 @@ def main():
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
+                    dream_egg.update(screen, True)
+                    kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
                 attack_tmr += 1
@@ -1343,8 +1391,10 @@ def main():
                 # 怒涛の初期化
                 sound.stop()
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
-                # beams.update(screen, True)
+                rakutan.update(screen, True)
+                dream_egg.update(screen, True)
                 # barrages.update(True)
+                kkton.rect.centerx = WIDTH/2
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
@@ -1356,7 +1406,6 @@ def main():
                 scenechange = 1
             gameover_tmr += 1
             
-
         elif scenechange == 3:
             """
             ゲーム終了
