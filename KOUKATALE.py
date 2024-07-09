@@ -886,6 +886,30 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 
 
+class SideWall(pg.sprite.Sprite):
+    """
+    横から障害物が出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        障害物の初期化
+        """
+        super().__init__()
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 255), (0, 0, 300, 100))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos 
+
+        self.tmr = 0
+
+    def update(self, screen, reset=False):
+        self.tmr += 1
+        screen.blit(self.image, self.rect)
+        if self.tmr == 12 or reset:
+            self.kill() 
+
+
 def main():
     pg.display.set_caption("koukAtale")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -934,6 +958,7 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
+    sidewall = pg.sprite.Group()
 
     """
     以下それぞれのシーンのタイマーを用意
@@ -1163,7 +1188,7 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = random.randint(0, attack_num)
+                        attack_rand = 1#random.randint(0, attack_num)
                         gameschange = 3
                     select_tmr += 1
                 else:
@@ -1207,7 +1232,18 @@ def main():
                     """
                     以下に各自攻撃の処理を行う
                     """
-                    pass
+                    # 横からビームの作成
+                    if attack_tmr % 12 == 0:  # 一定時間ごとに障害物を生成
+                        start_pos = (WIDTH/2, random.choice([HEIGHT/2, HEIGHT/2+100, HEIGHT/2+200]))
+                        sidewall.add(SideWall(start_pos))
+                    # 落単との衝突判定
+                    if len(pg.sprite.spritecollide(heart, sidewall, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 3
+                            heart.invincible = True
 
                 """
                 クラスの更新を行う
@@ -1220,7 +1256,8 @@ def main():
                 hp.draw(screen)
                 choice.draw(screen, True)
                 hp.update()
-                rakutan.update(screen) 
+                rakutan.update(screen)
+                sidewall.update(screen) 
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1229,6 +1266,7 @@ def main():
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
+                    sidewall.update(screen, True)
                     gameschange = 0
                     select_tmr = 0
                 attack_tmr += 1
