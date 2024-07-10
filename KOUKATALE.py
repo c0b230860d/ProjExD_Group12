@@ -973,7 +973,7 @@ def main():
     """
     効果音やBGMの変数を用意
     """
-    pygame.mixer.init()
+    pg.mixer.init()
     select_voice = pg.mixer.Sound("./voice/snd_select.wav")
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
