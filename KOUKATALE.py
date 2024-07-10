@@ -988,18 +988,18 @@ def main():
     # ゲーム開始
     while True:
         """
-        for文内では基本的にゲームのシーンの切り替えと
-        必要に応じてクラスの呼び出しに使用している
-        特に、使用しないなら最小化しておくべき
+        scenechange変数の値に応じた画面を表示する
         """
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                return
-            elif event.type == pg.KEYDOWN:
-                if scenechange == 0:
-                    """
-                    タイトル画面での処理
-                    """
+        screen.fill((0,0,0))  # 背景を描画
+
+        if scenechange == 0:  # タイトル画面
+            """
+            タイトル画面
+            """
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    return
+                elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_RETURN:
                         if gameti.end_title == 1:
                             gameti.end_title = 2
@@ -1008,14 +1008,18 @@ def main():
                             scenechange = 1
                             gameti.menu.stop()
                             sound.play(-1)
-                elif scenechange == 1:
-                    """
-                    ゲームをプレイ中での処理
-                    """
-                    if gameschange == 0:  
-                        """
-                        選択画面での処理
-                        """
+
+            gameti.update(screen)
+
+        elif scenechange == 1:  # ゲームプレイ画面
+            """
+            ゲームプレイシーン
+            """
+            if gameschange == 0:  # 選択画面
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
                         choice.update(event.key)
                         if event.key == pg.K_RETURN:  # エンターキーを押されたら
                             if choice.index == 0:  # こうげきを選択していたら
@@ -1032,101 +1036,7 @@ def main():
                                     gameschange = 5
                             elif choice.index == 3:  # みのがすを選択していたら
                                 pass
-                    elif gameschange == 1:  
-                        """
-                        攻撃相手を選択する画面での処理
-                        """    
-                        if event.key == pg.K_ESCAPE:
-                            gameschange = 0
-                        elif event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 2
-                    elif gameschange == 2:
-                        """
-                        アタックバーが表示されている画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            atk = True 
-                    elif gameschange == 4:
-                        """
-                        こうどうが表示されている画面での処理
-                        """
-                        choice_action.update(event.key)
-                        if event.key == pg.K_ESCAPE:
-                            select_voice.play(0)
-                            gameschange = 0
-                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
-                            if choice_action.index == 0:
-                                select_voice.play(0)
-                                gameschange = 6
-                            elif choice_action.index == 1:
-                                select_voice.play(0)
-                                gameschange = 7
-                            elif choice_action.index == 2:
-                                select_voice.play(0)
-                                gameschange = 8
-                            elif choice_action.index == 3:
-                                select_voice.play(0)
-                                gameschange = 9 
-                    elif gameschange == 5:
-                        """
-                        アイテムが表示されている画面での処理
-                        """
-                        choice_item.update(event.key)
-                        if event.key == pg.K_ESCAPE:
-                            select_voice.play(0)
-                            gameschange = 0
-                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
-                            item.cure(hp, choice_item_lst[choice_item.index], choice_item_lst)
-                            if item.next:
-                                choice_item.index = 0
-                                gameschange=3
-                                
-                    elif gameschange == 6:
-                        """
-                        「こうかとんを分析」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 7:
-                        """
-                        「こうかとんと話す」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 8:
-                        """
-                        「こうかとんを焼く」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 9:
-                        """
-                        「こうかとんを説得する」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-        
-        """
-        scenechange変数の値に応じた画面を表示する
-        """
-        screen.fill((0,0,0))  # 背景を描画
 
-        if scenechange == 0:  # タイトル画面
-            """
-            タイトル画面
-            """
-            gameti.update(screen)
-
-        elif scenechange == 1:  # ゲームプレイ画面
-            """
-            ゲームプレイシーン
-            """
-            if gameschange == 0:  # 選択画面
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1136,6 +1046,16 @@ def main():
                 choice.draw(screen)  # 選択肢の対か
             
             elif gameschange == 1:  # 「こうげき」を選択した場合
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            gameschange = 0
+                        elif event.key == pg.K_RETURN:
+                            select_voice.play(0)
+                            gameschange = 2
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 afterchoice = AfterChoice(["＊　こうかとん"])  # 攻撃相手のリストを渡す
                 afterchoice.draw(screen)  # 渡したリストを表示
@@ -1145,6 +1065,13 @@ def main():
                 choice.draw(screen)  # 選択肢の更新
 
             elif gameschange == 2:  # アタックバー画面
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                atk = True
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんの表示
                 if atk:  # atkが有効かされたら 
@@ -1174,6 +1101,9 @@ def main():
                 以下にこうかとんの攻撃画面が表示される。
                 攻撃の描画やあたり判定などはここで行うこと
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
                 pg.draw.rect(screen,(255,255,255), Rect(WIDTH/2-150, HEIGHT/2-50, 300, 300), 5)
                 if hp.hp <= 0:
                     """
@@ -1234,6 +1164,28 @@ def main():
                 """
                 どの行動をとるのかの選択を表示する
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        choice_action.update(event.key)
+                        if event.key == pg.K_ESCAPE:
+                            select_voice.play(0)
+                            gameschange = 0
+                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
+                            if choice_action.index == 0:
+                                select_voice.play(0)
+                                gameschange = 6
+                            elif choice_action.index == 1:
+                                select_voice.play(0)
+                                gameschange = 7
+                            elif choice_action.index == 2:
+                                select_voice.play(0)
+                                gameschange = 8
+                            elif choice_action.index == 3:
+                                select_voice.play(0)
+                                gameschange = 9 
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 kkton.update(screen)
@@ -1249,6 +1201,20 @@ def main():
                 """
                 どのアイテムを選ぶのかの選択を表示する
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        choice_item.update(event.key)
+                        if event.key == pg.K_ESCAPE:
+                            select_voice.play(0)
+                            gameschange = 0
+                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
+                            item.cure(hp, choice_item_lst[choice_item.index], choice_item_lst)
+                            if item.next:
+                                choice_item.index = 0
+                                gameschange=3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 kkton.update(screen)
@@ -1264,6 +1230,14 @@ def main():
                 """
                 「こうかとんを分析する」を選択した後の画面の表示
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとん:Attack 3 Diffence 100", "こうかとん、それはこの世の支配者、、、"])   
@@ -1280,6 +1254,13 @@ def main():
                 """
                 「こうかとんと話す」を選択した後の画面の表示
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんは、話を聞いてくれないようだ", "こうかとん：「貴様ごときが口を開くな」"])   
@@ -1296,6 +1277,14 @@ def main():
                 """
                 「こうかとんを焼く」を選択した後の画面の表示
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんにそんなことをしてはいけない", "こうかとん：「なめた物言いだな、、、」"])   
@@ -1312,6 +1301,13 @@ def main():
                 """
                 「こうかとんを説得する」を選択した後の画面の表示
                 """
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんは聞く耳を持たない", "こうかとん：「ふんっ」"])   
