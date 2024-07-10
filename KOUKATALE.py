@@ -844,6 +844,32 @@ class Talk:
         screen.blit(line_txt, (__class__.x+80, __class__.y+30))
 
 
+class Item:
+    """
+    アイテムの処理に関するクラス
+    """
+    def __init__(self):
+        self.dic = {
+            "＊　こうかとんエキス":10, 
+            "＊　こうかとんジュース":10, 
+            "＊　こうかとんエナジー":20, 
+            "＊　こうかとんドリンク":30,
+        }
+        self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
+        self.next = False
+
+    def cure(self, hp:"HealthBar", item: str, lst: list):
+        if hp.max > hp.hp:
+            self.cure_voice.play(0)
+            hp.hp += self.dic[item]
+            if hp.hp > hp.max:
+                hp.hp = hp.max
+            lst.remove(item)
+            self.next = True
+        else:
+            self.next = False
+
+
 """
 以下にこうかとんが攻撃する内容についてのクラスを用意する
 """
@@ -931,6 +957,7 @@ def main():
     gameov = GameOver(random.randint(0, 3))
     gameti = GameTitle()
     gameend_atk = GameEnd_ver_atk()
+    item = Item()
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
@@ -1050,41 +1077,11 @@ def main():
                             select_voice.play(0)
                             gameschange = 0
                         if event.key == pg.K_RETURN:  # エンターキーを押されたら
-                            if choice_item.index == 0:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[0]
-                            elif choice_item.index == 1:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[1]
+                            item.cure(hp, choice_item_lst[choice_item.index], choice_item_lst)
+                            if item.next:
                                 choice_item.index = 0
-                            elif choice_item.index == 2:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[2]
-                                choice_item.index = 0
-                            elif choice_item.index == 3:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[3]
-                                choice_item.index = 0
+                                gameschange=3
+                                
                     elif gameschange == 6:
                         """
                         「こうかとんを分析」を表示する画面での処理
@@ -1119,13 +1116,13 @@ def main():
         """
         screen.fill((0,0,0))  # 背景を描画
 
-        if scenechange == 0:
+        if scenechange == 0:  # タイトル画面
             """
             タイトル画面
             """
             gameti.update(screen)
 
-        elif scenechange == 1:
+        elif scenechange == 1:  # ゲームプレイ画面
             """
             ゲームプレイシーン
             """
@@ -1138,7 +1135,7 @@ def main():
                 hp.update()  # 残り体力を更新
                 choice.draw(screen)  # 選択肢の対か
             
-            elif gameschange == 1:  # こうげきを選択した場合
+            elif gameschange == 1:  # 「こうげき」を選択した場合
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 afterchoice = AfterChoice(["＊　こうかとん"])  # 攻撃相手のリストを渡す
                 afterchoice.draw(screen)  # 渡したリストを表示
@@ -1233,7 +1230,7 @@ def main():
                     select_tmr = 0
                 attack_tmr += 1
 
-            elif gameschange == 4:  
+            elif gameschange == 4:  # 「こうどう」を選択した場合
                 """
                 どの行動をとるのかの選択を表示する
                 """
@@ -1248,7 +1245,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 5:
+            elif gameschange == 5:  # 「アイテム」の画面
                 """
                 どのアイテムを選ぶのかの選択を表示する
                 """
@@ -1263,7 +1260,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 6:
+            elif gameschange == 6:  # 「分析」の選択
                 """
                 「こうかとんを分析する」を選択した後の画面の表示
                 """
@@ -1279,7 +1276,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 7:
+            elif gameschange == 7:  # 「話す」の選択
                 """
                 「こうかとんと話す」を選択した後の画面の表示
                 """
@@ -1295,7 +1292,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 8:
+            elif gameschange == 8:  # 「焼く」の選択
                 """
                 「こうかとんを焼く」を選択した後の画面の表示
                 """
@@ -1311,7 +1308,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 9:
+            elif gameschange == 9:  # 「説得」の選択
                 """
                 「こうかとんを説得する」を選択した後の画面の表示
                 """
@@ -1326,8 +1323,8 @@ def main():
                 hp.update()
                 # 選択肢の更新
                 choice.draw(screen)
-
-        elif scenechange == 2:
+   
+        elif scenechange == 2:  # ゲームオーバー画面
             """
             ゲームオーバーシーン
             プレイヤーのHPが0以下になったら実行される
@@ -1355,9 +1352,8 @@ def main():
                 gameschange = 0
                 scenechange = 1
             gameover_tmr += 1
-            
 
-        elif scenechange == 3:
+        elif scenechange == 3:  # ゲームエンド画面
             """
             ゲーム終了
             """
