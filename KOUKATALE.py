@@ -1220,15 +1220,10 @@ def main():
                                 gameschange=3
 
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
-                # 選択肢後の画面に関する初期化
-                kkton.update(screen)
-                # アイテムの選択画面
-                choice_item.draw(screen)
-                # 体力バーの更新
-                hp.draw(screen)
-                hp.update()
-                # 選択肢の更新
-                choice.draw(screen)
+                kkton.update(screen)  # こうかとんの描画
+                choice_item.draw(screen)  # アイテムの描画
+                hp.draw(screen)  # 体力の描画
+                choice.draw(screen)  # 選択肢の描画
 
             elif gameschange == 6:  # 「分析」の選択
                 """
