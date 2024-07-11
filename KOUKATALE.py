@@ -911,8 +911,10 @@ class Bound_Beam(pg.sprite.Sprite):
         # 画面の端に当たった場合、速度の方向を反転させます。
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
-        if check_bound2(self.rect) != (True, True):
+        bound_x, bound_y = check_bound2(self.rect)
+        if not bound_x:
             self.vx = -self.vx
+        if not bound_y:
             self.vy = -self.vy
         if reset:
             self.kill()
