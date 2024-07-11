@@ -859,6 +859,12 @@ class Item:
         self.next = False
 
     def cure(self, hp:"HealthBar", item: str, lst: list):
+        """
+        引数1 hp：HPの残り残量
+        引数2 item：なんのアイテムを使用したか
+        引数3 lst：残りの使えるアイテムのリスト
+        アイテムに応じた体力の回復を行う
+        """
         if hp.max > hp.hp:
             self.cure_voice.play(0)
             hp.hp += self.dic[item]
@@ -918,8 +924,8 @@ def main():
     """
     ゲームのシーンを切り替えるための変数(Flag)
     """
-    scenechange = 0  # 0: タイトル, 1:ゲームプレイ, 2:ゲームオーバー 
-    gameschange = 0  # 0：選択画面, 1：攻撃
+    scenechange = 0  # 0: タイトル, 1:ゲームプレイ, 2:ゲームオーバー , 3:ゲームクリア
+    gameschange = 0  # 0：選択画面, 1：攻撃相手選択
     """
     以下クラスの初期化
     """
@@ -977,7 +983,6 @@ def main():
     select_voice = pg.mixer.Sound("./voice/snd_select.wav")
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
-    cure_voice = pg.mixer.Sound("./voice/cure.wav")
     """
     その他必要な初期化
     """
@@ -996,6 +1001,7 @@ def main():
             """
             タイトル画面
             """
+            # キー操作による状態遷移
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     return
@@ -1014,8 +1020,10 @@ def main():
         elif scenechange == 1:  # ゲームプレイ画面
             """
             ゲームプレイシーン
+            gamechange変数に応じた画面を表示する
             """
             if gameschange == 0:  # 選択画面
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1028,12 +1036,9 @@ def main():
                             elif choice.index == 1:  # こうどうを選択していたら
                                 select_voice.play(0)
                                 gameschange = 4
-                            elif choice.index == 2:  # アイテムを選択していたら
+                            elif choice.index == 2 and len(choice_item_lst) != 0:  # アイテムを選択していたら
                                 select_voice.play(0)
-                                if len(choice_item_lst) == 0:  # アイテムが無かったら
-                                    pass
-                                else:
-                                    gameschange = 5
+                                gameschange = 5
                             elif choice.index == 3:  # みのがすを選択していたら
                                 pass
 
@@ -1046,6 +1051,7 @@ def main():
                 choice.draw(screen)  # 選択肢の対か
             
             elif gameschange == 1:  # 「こうげき」を選択した場合
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1057,14 +1063,14 @@ def main():
                             gameschange = 2
 
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
-                afterchoice = AfterChoice(["＊　こうかとん"])  # 攻撃相手のリストを渡す
-                afterchoice.draw(screen)  # 渡したリストを表示
+                choice_attack.draw(screen)  # 渡したリストを表示
                 kkton.update(screen)  # こうかとんの表示
                 hp.draw(screen)  # 残り体力の描画
                 hp.update()  # 残り体力の更新
                 choice.draw(screen)  # 選択肢の更新
 
             elif gameschange == 2:  # アタックバー画面
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1097,13 +1103,14 @@ def main():
                 choice.draw(screen)  # 選択肢の表示
 
             elif gameschange == 3:  # 攻撃される画面
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
                 """
                 以下にこうかとんの攻撃画面が表示される。
                 攻撃の描画やあたり判定などはここで行うこと
                 """
-                for event in pg.event.get():
-                    if event.type == pg.QUIT:
-                        return
                 pg.draw.rect(screen,(255,255,255), Rect(WIDTH/2-150, HEIGHT/2-50, 300, 300), 5)
                 if hp.hp <= 0:
                     """
@@ -1164,6 +1171,7 @@ def main():
                 """
                 どの行動をとるのかの選択を表示する
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1187,20 +1195,16 @@ def main():
                                 gameschange = 9 
 
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
-                # 選択肢後の画面に関する初期化
-                kkton.update(screen)
-                # 行動の選択画面
-                choice_action.draw(screen)
-                # 体力バーの更新
-                hp.draw(screen)
-                hp.update()
-                # 選択肢の更新
-                choice.draw(screen)
+                kkton.update(screen)  # こうかとんの描画
+                choice_action.draw(screen)  # 行動の選択肢の描画
+                hp.draw(screen)  # 体力バーの描画
+                choice.draw(screen)  # 選択肢の更新
 
             elif gameschange == 5:  # 「アイテム」の画面
                 """
                 どのアイテムを選ぶのかの選択を表示する
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1230,6 +1234,7 @@ def main():
                 """
                 「こうかとんを分析する」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1254,6 +1259,7 @@ def main():
                 """
                 「こうかとんと話す」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1277,6 +1283,7 @@ def main():
                 """
                 「こうかとんを焼く」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1301,6 +1308,7 @@ def main():
                 """
                 「こうかとんを説得する」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
@@ -1325,6 +1333,11 @@ def main():
             ゲームオーバーシーン
             プレイヤーのHPが0以下になったら実行される
             """
+            # キー操作による状態遷移
+            for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    
             if gameover_tmr < 50:
                 breakheart.update(screen)
             elif gameover_tmr == 50:
@@ -1353,6 +1366,10 @@ def main():
             """
             ゲーム終了
             """
+            # キー操作による状態遷移
+            for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
             pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
             gameend_atk.update(screen)
             hp.draw(screen)
