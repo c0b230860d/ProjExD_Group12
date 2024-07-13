@@ -689,7 +689,7 @@ class GameTitle:
         self.tmr += 1
 
 
-class GameEnd_ver_atk:
+class GameEndVerAtk:
     """
     こうかとんを倒したときに関するクラス
     """
@@ -708,9 +708,9 @@ class GameEnd_ver_atk:
     x = WIDTH/2
     y = HEIGHT/4+30
 
-    def __init__(self):
+    def __init__(self, kkton: 'Koukaton'):
         """
-        引数なし
+        引数1 kkton：こうかとんクラス
         """
         self.x = __class__.x
         self.y = __class__.y
@@ -728,7 +728,7 @@ class GameEnd_ver_atk:
         
         self.tmr = 0
         
-        self.talk = Talk()
+        self.talk = Talk(kkton)
 
         self.wave_amp = 0  # 波の振幅
         self.wave_freq = 0  # 波の周波数
@@ -819,13 +819,16 @@ class Talk:
         pg.image.load("fig/Speech_bubble.png"), 
         0, 0.3
         )
-    x = 4*WIDTH/7
+    # x = 4*WIDTH/7
     y = HEIGHT/6
 
-    def __init__(self):
+    def __init__(self, kkton:'Koukaton'):
+        """
+        引数1 kkton：こうかとんクラス
+        """
+        self.kkton = kkton
         self.img = __class__.img
         self.rect = self.img.get_rect()
-        self.rect.x = Talk.x
         self.rect.y = Talk.y
 
         self.font = pg.font.Font(FONT, 20)
@@ -834,6 +837,7 @@ class Talk:
         self.voice = pg.mixer.Sound("./voice/sanzu_voice.wav")
 
     def update(self, screen: pg.Surface, lines: str, len:int, tmr):
+        self.rect.x = self.kkton.rect.right
         screen.blit(self.img, self.rect)
         if self.index < len:
             if tmr % 2 == 0:
@@ -841,7 +845,7 @@ class Talk:
                 self.voice.play(0)
             
         line_txt = self.font.render(lines[:self.index], True, (0, 0, 0))
-        screen.blit(line_txt, (__class__.x+80, __class__.y+30))
+        screen.blit(line_txt, (self.kkton.rect.right+80, __class__.y+30))
 
 
 class Item:
@@ -976,6 +980,8 @@ def main():
     choice = Choice(choice_ls, 10, HEIGHT - 80)
     choice_attack_lst = ["＊　こうかとん"]
     choice_attack = AfterChoice(choice_attack_lst) 
+    choice_escape_ls = ["＊　にがす"]
+    choice_escape = AfterChoice(choice_escape_ls)
     choice_action_lst = [
         "＊　こうかとんを分析", 
         "＊　こうかとんと話す", 
@@ -993,8 +999,9 @@ def main():
     attack_bar = AttackBar(WIDTH-15, 300-(HEIGHT/2-50))
     gameov = GameOver(random.randint(0, 3))
     gameti = GameTitle()
-    gameend_atk = GameEnd_ver_atk()
+    gameend_atk = GameEndVerAtk(kkton)
     item = Item()
+    talk = Talk(kkton)
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
@@ -1021,6 +1028,9 @@ def main():
     attack_num = 1  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
+    no_attack: bool = True  # 一度でも攻撃したかどうか
+    no_attack_num = 0
+    end_judg = 20
 
     # ゲーム開始
     while True:
@@ -1072,8 +1082,9 @@ def main():
                                 select_voice.play(0)
                                 gameschange = 5
                             elif choice.index == 3:  # みのがすを選択していたら
-                                pass
-
+                                select_voice.play(0)
+                                gameschange = 10
+                attack_rand = random.randint(0, attack_num)
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1117,6 +1128,7 @@ def main():
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんの表示
                 if atk:  # atkが有効かされたら 
+                    no_attack = False
                     attack_bar.stop()  # バーを止める
                     if select_tmr == 0:
                         attack_voice.play(0)
@@ -1129,7 +1141,6 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = random.randint(0, attack_num)
                         gameschange = 3
                     select_tmr += 1
                 else:
@@ -1155,6 +1166,17 @@ def main():
                     sound.stop()
                     breakheart = BreakHeart(heart.rect.x, heart.rect.y)
                     scenechange = 2
+
+                if no_attack and attack_tmr < 50:  # 平和end用
+                    if no_attack_num == end_judg//2:
+                        lines = "キミ、こうげきしてこないね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num == end_judg-1:
+                        lines = "キミ、やさしいね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num >= end_judg:
+                        lines = "逃がしてあげるよ"
+                        talk.update(screen,lines,len(lines), attack_tmr)
 
                 if attack_rand == 0:
                     """
@@ -1213,6 +1235,8 @@ def main():
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
+                    talk.index = 0
+                    no_attack_num += 1
                 attack_tmr += 1
 
             elif gameschange == 4:  # 「こうどう」を選択した場合
@@ -1273,7 +1297,7 @@ def main():
                 hp.draw(screen)  # 体力の描画
                 choice.draw(screen)  # 選択肢の描画
 
-            elif gameschange == 6:  # 「分析」の選択
+            elif gameschange == 6:  # 分析の選択
                 """
                 「こうかとんを分析する」を選択した後の画面の表示
                 """
@@ -1298,7 +1322,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 7:  # 「話す」の選択
+            elif gameschange == 7:  # 話すの選択
                 """
                 「こうかとんと話す」を選択した後の画面の表示
                 """
@@ -1322,7 +1346,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 8:  # 「焼く」の選択
+            elif gameschange == 8:  # 焼くの選択
                 """
                 「こうかとんを焼く」を選択した後の画面の表示
                 """
@@ -1347,7 +1371,7 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 9:  # 「説得」の選択
+            elif gameschange == 9:  # 説得の選択
                 """
                 「こうかとんを説得する」を選択した後の画面の表示
                 """
@@ -1367,10 +1391,68 @@ def main():
                 afterchoice.draw(screen, True)
                 # 体力バーの更新
                 hp.draw(screen)
-                hp.update()
                 # 選択肢の更新
                 choice.draw(screen)
-   
+
+            elif gameschange == 10:  # 「みのがす」を選択した場合
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            gameschange = 0
+                        elif event.key == pg.K_RETURN:
+                            select_voice.play(0)
+                            gameschange = 11
+
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
+                choice_escape.draw(screen)  # 渡したリストを表示
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)  # 残り体力の描画
+                choice.draw(screen)  # 選択肢の更新
+            
+            elif gameschange == 11:  # にがすを選択(にがせない場合)
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            # if no_attack == False
+                            select_voice.play(0)
+                            gameschange = 3
+                
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                if no_attack and no_attack_num > end_judg:
+                    gameschange = 12
+                    sound.stop()
+                else:
+                    print(no_attack_num)
+                    afterchoice = AfterChoice(["＊　にがせない !", "＊　こうかとんはにやにやしている"])
+                    afterchoice.draw(screen, True)
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)
+                choice.draw(screen)
+
+            elif gameschange == 12:
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            # if no_attack == False
+                            select_voice.play(0)
+                            return
+
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                afterchoice = AfterChoice(["＊　YOU WIN !", "＊　GPAと単位を かくとく！"])
+                afterchoice.draw(screen, True)
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)
+                choice.draw(screen)
+
         elif scenechange == 2:  # ゲームオーバー画面
             """
             ゲームオーバーシーン
