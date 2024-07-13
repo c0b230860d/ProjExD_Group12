@@ -871,8 +871,8 @@ class Item:
         self.dic = {
             "＊　こうかとんエキス":10, 
             "＊　こうかとんジュース":10, 
-            "＊　こうかとんエナジー":20, 
-            "＊　こうかとんドリンク":-30,
+            "＊　こうかとんエナジー":15, 
+            "＊　こうかとんドリンク":15,
         }
         self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
         self.next = False
