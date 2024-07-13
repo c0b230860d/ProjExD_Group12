@@ -1045,7 +1045,7 @@ def main():
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
     no_attack_num = 0  # 何回攻撃されたか
-    end_judg = 8  # 何回攻撃されたら見逃すかに関する変数
+    end_judg = 20  # 何回攻撃されたら見逃すかに関する変数
     restart = False # リスタート判定
 
     # ゲーム開始
@@ -1187,14 +1187,14 @@ def main():
                     if no_attack_num == end_judg//2:
                         lines = "キミ、こうげきしてこないね"
                         talk.update(screen,lines,len(lines), attack_tmr)
-                    elif no_attack_num == end_judg - 2:
+                    elif no_attack_num == 2*end_judg//3:
                         lines = "もしかして\nこうげきしなかったら\n単位もらえると思ってる？"
                         talk.update(screen,lines,len(lines), attack_tmr)
-                    elif no_attack_num == end_judg - 1:
-                        lines = "ﾌﾌﾌ...\nキミ本当にやさしいね"
+                    elif no_attack_num == 4*end_judg//5:
+                        lines = "ﾌﾌﾌ...\nキミ本当にやさしいね\nそろそろ僕もつかれてきたな"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num == end_judg:
-                        lines = "わかったよ\nキミの願いをかなえてあげよう\nまた遊ぼうね"
+                        lines = "わかったよ\nキミの願いをかなえてあげるよ\nまた遊ぼうね"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num > end_judg:
                         lines = "何してるんだい？\n遊べて楽しかったよ\n早くお逃げ"
@@ -1486,7 +1486,6 @@ def main():
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
                             restart = True
-                            print(restart)
 
             if gameover_tmr < 50:
                 breakheart.update(screen)
@@ -1495,8 +1494,6 @@ def main():
                 sound.play(-1)
             elif 50 < gameover_tmr:
                 gameov.update(screen)
-                print(restart)
-                print(gameover_tmr)
             if gameover_tmr > 100 and restart:
                 # 怒涛の初期化
                 sound.stop()
@@ -1515,6 +1512,7 @@ def main():
                     "＊　こうかとんエナジー", 
                     "＊　こうかとんドリンク",
                     ]
+                choice_item = (AfterChoice(choice_item_lst))
                 gameov.update(screen, True)
                 sound = pg.mixer.Sound("./sound/Megalovania.mp3")
                 sound.play(-1)
