@@ -827,25 +827,40 @@ class Talk:
         引数1 kkton：こうかとんクラス
         """
         self.kkton = kkton
+
+        # ふきだしの設定
         self.img = __class__.img
         self.rect = self.img.get_rect()
         self.rect.y = Talk.y
+        # self.max_width = self.rect.width - 20  # 吹き出し内の最大幅
 
         self.font = pg.font.Font(FONT, 20)
         self.index = 0
 
         self.voice = pg.mixer.Sound("./voice/sanzu_voice.wav")
 
-    def update(self, screen: pg.Surface, lines: str, len:int, tmr):
+    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int):
+        """
+        セリフを表示する
+        引数1 screen：画面Surface
+        引数2 lines：表示させたいセリフの文字列
+        引数3 len：文字列の長さ
+        引数4 tmr：表示しているときのタイマー
+        """
         self.rect.x = self.kkton.rect.right
         screen.blit(self.img, self.rect)
         if self.index < len:
             if tmr % 2 == 0:
                 self.index += 1
                 self.voice.play(0)
-            
-        line_txt = self.font.render(lines[:self.index], True, (0, 0, 0))
-        screen.blit(line_txt, (self.kkton.rect.right+80, __class__.y+30))
+
+        lines_list = lines[:self.index].split('\n')
+        y_offset = 0
+
+        for line in lines_list:
+            line_txt = self.font.render(line, True, (0, 0, 0))
+            screen.blit(line_txt, (self.kkton.rect.right + 80, __class__.y + 30 + y_offset))
+            y_offset += line_txt.get_height()  # 次の行のY座標を計算
 
 
 class Item:
@@ -857,7 +872,7 @@ class Item:
             "＊　こうかとんエキス":10, 
             "＊　こうかとんジュース":10, 
             "＊　こうかとんエナジー":20, 
-            "＊　こうかとんドリンク":30,
+            "＊　こうかとんドリンク":-30,
         }
         self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
         self.next = False
@@ -1029,8 +1044,9 @@ def main():
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
-    no_attack_num = 0
-    end_judg = 20
+    no_attack_num = 0  # 何回攻撃されたか
+    end_judg = 8  # 何回攻撃されたら見逃すかに関する変数
+    restart = False # リスタート判定
 
     # ゲーム開始
     while True:
@@ -1167,15 +1183,21 @@ def main():
                     breakheart = BreakHeart(heart.rect.x, heart.rect.y)
                     scenechange = 2
 
-                if no_attack and attack_tmr < 50:  # 平和end用
+                if no_attack and attack_tmr < 75:  # 平和end用
                     if no_attack_num == end_judg//2:
                         lines = "キミ、こうげきしてこないね"
                         talk.update(screen,lines,len(lines), attack_tmr)
-                    elif no_attack_num == end_judg-1:
-                        lines = "キミ、やさしいね"
+                    elif no_attack_num == end_judg - 2:
+                        lines = "もしかして\nこうげきしなかったら\n単位もらえると思ってる？"
                         talk.update(screen,lines,len(lines), attack_tmr)
-                    elif no_attack_num >= end_judg:
-                        lines = "逃がしてあげるよ"
+                    elif no_attack_num == end_judg - 1:
+                        lines = "ﾌﾌﾌ...\nキミ本当にやさしいね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num == end_judg:
+                        lines = "わかったよ\nキミの願いをかなえてあげよう\nまた遊ぼうね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num > end_judg:
+                        lines = "何してるんだい？\n遊べて楽しかったよ\n早くお逃げ"
                         talk.update(screen,lines,len(lines), attack_tmr)
 
                 if attack_rand == 0:
@@ -1419,7 +1441,6 @@ def main():
                         return
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
-                            # if no_attack == False
                             select_voice.play(0)
                             gameschange = 3
                 
@@ -1462,15 +1483,21 @@ def main():
             for event in pg.event.get():
                     if event.type == pg.QUIT:
                         return
-                    
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            restart = True
+                            print(restart)
+
             if gameover_tmr < 50:
                 breakheart.update(screen)
             elif gameover_tmr == 50:
                 sound = pg.mixer.Sound("./sound/gameover.mp3")
                 sound.play(-1)
-            elif 50 < gameover_tmr <= 400:
+            elif 50 < gameover_tmr:
                 gameov.update(screen)
-            elif gameover_tmr > 400:
+                print(restart)
+                print(gameover_tmr)
+            if gameover_tmr > 100 and restart:
                 # 怒涛の初期化
                 sound.stop()
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
@@ -1482,11 +1509,19 @@ def main():
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
                 select_tmr = 0
+                choice_item_lst = [
+                    "＊　こうかとんエキス", 
+                    "＊　こうかとんジュース", 
+                    "＊　こうかとんエナジー", 
+                    "＊　こうかとんドリンク",
+                    ]
                 gameov.update(screen, True)
                 sound = pg.mixer.Sound("./sound/Megalovania.mp3")
                 sound.play(-1)
+                talk.index = 0
                 gameschange = 0
                 scenechange = 1
+                restart = False
             gameover_tmr += 1
 
         elif scenechange == 3:  # ゲームエンド画面
