@@ -84,24 +84,51 @@ class Koukaton(pg.sprite.Sprite):
     """
     こうかとん表示に関するクラス
     """
-    img = pg.transform.rotozoom(
-        pg.image.load("fig/dot_kk_negate.png"),
-        0,1.5
-    )
+    # img = pg.transform.rotozoom(
+    #     pg.image.load("fig/dot_kk_negate.png"),
+    #     0,1.5
+    # )
     def __init__(self):
         """
         こうかとん画像Surfaceを生成する
         """
         super().__init__()
-        self.image = __class__.img
+        self.images = [
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate4.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
+        ]
+        self.image_index = 0
+        self.image = self.images[self.image_index]
+        # self.image = __class__.img
         self.rect: pg.Rect = self.image.get_rect()
         self.rect.center = WIDTH/2, HEIGHT/4+30
+        self.frame_count = 0
+        self.next = True
+        self.tmr = 0
 
     def update(self, screen: pg.Surface):
         """
         こうかとんを表示
         引数1 screen：画面サーファイス
         """
+        self.frame_count += 1
+        if self.frame_count % 5 == 0 and self.next == True:  # フレームごとに切り替え速度を調整
+            self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
+            if self.image_index == len(self.images)-1:
+                self.next = False
+        else:
+            self.tmr += 1
+            if self.tmr > 100:
+                self.next = True
+                self.tmr = 0
+            
+            
         screen.blit(self.image, self.rect)
 
     
@@ -994,6 +1021,11 @@ class FollowingBeam(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
 
+        self.font = pygame.font.Font(FONT, 18)
+        self.label = self.font.render("追試", True, (50, 50, 50))
+        self.frct = self.label.get_rect()
+        self.frct.center = start_pos
+
         if follow:  # 追従する場合
             self.vx, self.vy = calc_orientation(self.rect, heart.rect)
         else:
@@ -1007,6 +1039,7 @@ class FollowingBeam(pg.sprite.Sprite):
         self.vy = -math.sin(math.radians(angle))
 
         self.image = pg.transform.rotate(self.image, angle)
+        self.label = pg.transform.rotate(self.label, angle)
 
         self.tmr = 0
     
@@ -1017,8 +1050,10 @@ class FollowingBeam(pg.sprite.Sprite):
         引数2 reset：リセット用
         """
         screen.blit(self.image, self.rect)
+        screen.blit(self.label, self.frct)
         if self.tmr > 10:
             self.rect.move_ip(20*self.vx, 20*self.vy)
+            self.frct.move_ip(20*self.vx, 20*self.vy)
         
         if self.tmr > 50 or reset:
             self.kill()
@@ -1332,7 +1367,6 @@ def main():
                                     else:
                                         hp.hp -= 3
                                     heart.invincible = True
-
 
                 """
                 クラスの更新を行う
