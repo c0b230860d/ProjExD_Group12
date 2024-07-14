@@ -939,6 +939,12 @@ class DreamEgg(pg.sprite.Sprite):
     こうかとんの卵攻撃に関するクラス
     """
     def __init__(self, kkton: "Koukaton", heart: "Heart", angle = 0):
+        """
+        卵の初期化
+        引数1 kkton：こうかとんクラス
+        引数2 heart：ハートクラス
+        引数3 angle：ハートへのアングル
+        """
         super().__init__()
         rad = 10
         self.image = pg.Surface((2*rad, 2*rad))
@@ -961,12 +967,64 @@ class DreamEgg(pg.sprite.Sprite):
     def update(self, screen: pg.Surface, reset=False):
         """
         DreamEggの描画
+        引数1 screen：画面Surface
+        引数2 reset：リセット用
         """
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         screen.blit(self.image, self.rect)
         if check_bound1(self.rect) != (True, True) or reset:
             self.kill()
 
+
+class FollowingBeam(pg.sprite.Sprite):
+    """
+    追従するビームに関するクラス
+    """
+    def __init__(self, heart: "Heart", start_pos: tuple[int, int], angle = 0, follow = False):
+        """
+        ビームの初期化
+        引数1 heart：ハートクラス
+        引数2 angle：ハートへのアングル
+        引数3 follow：ハートに追従するか
+        """
+        super().__init__()
+        self.image = pg.Surface((100, 30))
+        pg.draw.rect(self.image, (255, 255, 255), (0, 0, 100, 30))
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        if follow:  # 追従する場合
+            self.vx, self.vy = calc_orientation(self.rect, heart.rect)
+        else:
+            self.img = pg.Surface((0,0))
+            self.irect = self.img.get_rect()
+            self.irect.center = WIDTH/2, HEIGHT/2+100
+
+            self.vx, self.vy = calc_orientation(self.rect, self.irect)
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+
+        self.image = pg.transform.rotate(self.image, angle)
+
+        self.tmr = 0
+    
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        DreamEggの描画
+        引数1 screen：画面Surface
+        引数2 reset：リセット用
+        """
+        screen.blit(self.image, self.rect)
+        if self.tmr > 10:
+            self.rect.move_ip(20*self.vx, 20*self.vy)
+        
+        if self.tmr > 50 or reset:
+            self.kill()
+            self.tmr = 0
+        self.tmr += 1
+    
     
 def main():
     pg.display.set_caption("koukAtale")
@@ -1021,6 +1079,7 @@ def main():
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
     dream_egg = pg.sprite.Group()
+    follow_bream = pg.sprite.Group()
 
     """
     以下それぞれのシーンのタイマーを用意
@@ -1040,13 +1099,14 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 1  # 攻撃の種類に関する変数
+    attack_num = 3  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
     no_attack_num = 0  # 何回攻撃されたか
     end_judg = 20  # 何回攻撃されたら見逃すかに関する変数
     restart = False # リスタート判定
+    rand = 0
 
     # ゲーム開始
     while True:
@@ -1100,7 +1160,7 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
-                attack_rand = random.randint(0, attack_num)
+                attack_rand = random.randint(0, attack_num-1)
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1149,7 +1209,7 @@ def main():
                     if select_tmr == 0:
                         attack_voice.play(0)
                     if select_tmr == 3:
-                        atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 400 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < select_tmr < 30:
                         en_hp.draw(screen, atk_value)
@@ -1217,7 +1277,7 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                elif attack_rand == 1:
+                elif attack_rand == 1:  # 夢の卵攻撃
                     """
                     以下に各自攻撃の処理を行う
                     """
@@ -1231,6 +1291,31 @@ def main():
                             else:
                                 hp.hp -= 1
                             heart.invincible = True
+
+                elif attack_rand == 2:  # 追従ビーム攻撃
+                    if attack_tmr % 4 == 0:
+                        pi_lst = [
+                            0, math.pi/4, math.pi/2, 3*math.pi/4, 
+                            math.pi, 5*math.pi/4, 3*math.pi/2, 7*math.pi/4
+                            ]
+                        pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
+                        num = pi_lst[rand%(14*2-1)]
+                        x = math.cos(num)*200
+                        y = math.sin(num)*200
+
+                        start_pos = (WIDTH/2+x, HEIGHT/2+50+y)
+                        follow_bream.add(FollowingBeam(heart, start_pos, 0))
+                        rand += 1
+
+                    if len(pg.sprite.spritecollide(heart, follow_bream, False)) != 0:
+                        for beam in follow_bream:
+                            if pg.sprite.collide_mask(heart, beam):
+                                if heart.invincible == False:
+                                    if hp.hp < 3:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 5
+                                    heart.invincible = True
                 """
                 クラスの更新を行う
                 """
@@ -1244,6 +1329,7 @@ def main():
                 hp.update()
                 rakutan.update(screen) 
                 dream_egg.update(screen)
+                follow_bream.update(screen)
                 
                 if attack_tmr > 300: # 選択画面に戻る
                     """
@@ -1254,6 +1340,7 @@ def main():
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
                     dream_egg.update(screen, True)
+                    follow_bream.update(screen, True)
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
