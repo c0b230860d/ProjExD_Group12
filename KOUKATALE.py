@@ -1099,7 +1099,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 3  # 攻撃の種類に関する変数
+    attack_num = 4  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1209,7 +1209,7 @@ def main():
                     if select_tmr == 0:
                         attack_voice.play(0)
                     if select_tmr == 3:
-                        atk_value = 400 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < select_tmr < 30:
                         en_hp.draw(screen, atk_value)
@@ -1294,10 +1294,6 @@ def main():
 
                 elif attack_rand == 2:  # 追従ビーム攻撃
                     if attack_tmr % 4 == 0:
-                        pi_lst = [
-                            0, math.pi/4, math.pi/2, 3*math.pi/4, 
-                            math.pi, 5*math.pi/4, 3*math.pi/2, 7*math.pi/4
-                            ]
                         pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
                         num = pi_lst[rand%(14*2-1)]
                         x = math.cos(num)*200
@@ -1316,6 +1312,28 @@ def main():
                                     else:
                                         hp.hp -= 5
                                     heart.invincible = True
+
+                elif attack_rand == 3:
+                    if attack_tmr % 11 == 0:
+                        pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
+                        num = pi_lst[random.randint(0, len(pi_lst)-1)]
+                        x = math.cos(num)*200
+                        y = math.sin(num)*200
+
+                        start_pos = (heart.rect.centerx+x, heart.rect.centery+y)
+                        follow_bream.add(FollowingBeam(heart, start_pos, 0, True))
+
+                    if len(pg.sprite.spritecollide(heart, follow_bream, False)) != 0:
+                        for beam in follow_bream:
+                            if pg.sprite.collide_mask(heart, beam):
+                                if heart.invincible == False:
+                                    if hp.hp < 3:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 3
+                                    heart.invincible = True
+
+
                 """
                 クラスの更新を行う
                 """
@@ -1587,6 +1605,7 @@ def main():
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
                 rakutan.update(screen, True)
                 dream_egg.update(screen, True)
+                follow_bream.update(screen, True)
                 # barrages.update(True)
                 kkton.rect.centerx = WIDTH/2
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
@@ -1604,6 +1623,8 @@ def main():
                 sound = pg.mixer.Sound("./sound/Megalovania.mp3")
                 sound.play(-1)
                 talk.index = 0
+                no_attack: bool = True  # 一度でも攻撃したかどうか
+                no_attack_num = 0  # 何回攻撃されたか
                 gameschange = 0
                 scenechange = 1
                 restart = False
