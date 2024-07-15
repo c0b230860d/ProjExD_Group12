@@ -899,10 +899,13 @@ class SideBeamFake(pg.sprite.Sprite):
 
         self.image = pg.Surface((300, 100), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.image.fill((255, 255, 0, 100))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
 
         self.tmr = 0
+        self.sidebeam_voice = pg.mixer.Sound("./voice/sanzu_beam2.wav")
+        self.sidebeam_voice.play(0)
 
     def update(self, screen, reset=False):
         """
@@ -923,9 +926,13 @@ class SideWallReal(pg.sprite.Sprite):
         start_pos：スタート位置
         """
         super().__init__()
+        self.genx = 0
+        self.geny = 0
+        self.gengeny = 100
+        self.pos = start_pos
 
         self.image = pg.Surface((300, 100), pg.SRCALPHA)
-        pg.draw.rect(self.image, (255, 255, 255), (0, 0, 300, 100))
+        pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
 
@@ -936,7 +943,13 @@ class SideWallReal(pg.sprite.Sprite):
         mainのattack_tmrが40~60, 80~100,,,の間、表示できるようにする
         """
         self.tmr += 1
+        self.gengeny -= 3.0
+        self.geny += 1.5
         if 1 <= self.tmr < 21:
+            self.image = pg.Surface((300, 100), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
             screen.blit(self.image, self.rect)
         if self.tmr == 21 or reset:
             self.kill() 
@@ -1221,7 +1234,7 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = 1#random.randint(0, attack_num)
+                        attack_rand = random.randint(0, attack_num)
                         gameschange = 3
                     select_tmr += 1
                 else:
