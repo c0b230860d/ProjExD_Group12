@@ -1021,11 +1021,6 @@ class FollowingBeam(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
 
-        self.font = pygame.font.Font(FONT, 18)
-        self.label = self.font.render("追試", True, (50, 50, 50))
-        self.frct = self.label.get_rect()
-        self.frct.center = start_pos
-
         if follow:  # 追従する場合
             self.vx, self.vy = calc_orientation(self.rect, heart.rect)
         else:
@@ -1039,7 +1034,6 @@ class FollowingBeam(pg.sprite.Sprite):
         self.vy = -math.sin(math.radians(angle))
 
         self.image = pg.transform.rotate(self.image, angle)
-        self.label = pg.transform.rotate(self.label, angle)
 
         self.tmr = 0
     
@@ -1050,14 +1044,11 @@ class FollowingBeam(pg.sprite.Sprite):
         引数2 reset：リセット用
         """
         screen.blit(self.image, self.rect)
-        screen.blit(self.label, self.frct)
         if self.tmr > 10:
             self.rect.move_ip(20*self.vx, 20*self.vy)
-            self.frct.move_ip(20*self.vx, 20*self.vy)
         
         if self.tmr > 50 or reset:
             self.kill()
-            self.tmr = 0
         self.tmr += 1
     
     
@@ -1349,7 +1340,7 @@ def main():
                                     heart.invincible = True
 
                 elif attack_rand == 3:
-                    if attack_tmr % 11 == 0:
+                    if attack_tmr % 15 == 0:
                         pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
                         num = pi_lst[random.randint(0, len(pi_lst)-1)]
                         x = math.cos(num)*200
