@@ -933,7 +933,8 @@ class AttackRakutan(pg.sprite.Sprite):
     def __init__(self, color: tuple[int, int, int],start_pos: tuple[int, int]):
         """
         引数に基づき攻撃Surfaceを生成する
-        start_pos：スタート位置
+        引数1 color：色指定
+        引数2 start_pos：スタート位置
         """
         super().__init__()
         self.vx, self.vy = 0, +10
@@ -951,6 +952,7 @@ class AttackRakutan(pg.sprite.Sprite):
     def update(self, screen: pg.Surface, reset=False):
         """
         引数1 screen：画面Surface
+        引数2 reset：リセット判定
         """
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
@@ -973,6 +975,7 @@ class DreamEgg(pg.sprite.Sprite):
         引数3 angle：ハートへのアングル
         """
         super().__init__()
+        # 卵（円）の設定
         rad = 10
         self.image = pg.Surface((2*rad, 2*rad))
         color = (255, 255, 255)
@@ -980,9 +983,11 @@ class DreamEgg(pg.sprite.Sprite):
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
 
+        # 座標の設定
         self.rect.centerx = kkton.rect.centerx-40 # バッグから出ているように調整
         self.rect.centery = kkton.rect.centery+kkton.rect.height//2-40
         
+        # 場所と向きの設定
         kkton.rect.x = random.randint(WIDTH/2-50, WIDTH/2+50)
         self.vx, self.vy = calc_orientation(kkton.rect, heart.rect)
         angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
@@ -1015,6 +1020,8 @@ class FollowingBeam(pg.sprite.Sprite):
         引数3 follow：ハートに追従するか
         """
         super().__init__()
+
+        # ビームの四角形を描画
         self.image = pg.Surface((100, 30))
         pg.draw.rect(self.image, (255, 255, 255), (0, 0, 100, 30))
         self.image.set_colorkey((0, 0, 0))
@@ -1023,18 +1030,22 @@ class FollowingBeam(pg.sprite.Sprite):
 
         if follow:  # 追従する場合
             self.vx, self.vy = calc_orientation(self.rect, heart.rect)
-        else:
+        else:  # 中心座標の場合
             self.img = pg.Surface((0,0))
             self.irect = self.img.get_rect()
             self.irect.center = WIDTH/2, HEIGHT/2+100
 
             self.vx, self.vy = calc_orientation(self.rect, self.irect)
+        
+        # 向きと設定
         angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
 
+        # イメージの向きの設定
         self.image = pg.transform.rotate(self.image, angle)
 
+        # 時間
         self.tmr = 0
     
     def update(self, screen: pg.Surface, reset=False):
