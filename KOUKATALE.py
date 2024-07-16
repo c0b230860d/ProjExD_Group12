@@ -886,6 +886,146 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 
 
+class SideBeamFake(pg.sprite.Sprite):
+    """
+    予告ビームが出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        予告ビームの初期化
+        start_pos：スタート位置
+        """
+        super().__init__()
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.image.fill((255, 255, 0, 100))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        self.tmr = 0
+        self.sidebeam_voice = pg.mixer.Sound("./voice/sanzu_beam2.wav")
+        self.sidebeam_voice.play(0)
+
+    def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが0~20, 40~60, 80~100,,,の間、予告ビームを表示する
+        """
+        self.tmr += 1
+        screen.blit(self.image, self.rect)
+        if self.tmr == 20 or reset:
+            self.kill() 
+
+
+class SideWallReal(pg.sprite.Sprite):
+    """
+    横からビームが出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        横からビームの初期化
+        start_pos：スタート位置
+        """
+        super().__init__()
+        self.genx = 0
+        self.geny = 0
+        self.gengeny = 100
+        self.pos = start_pos
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        self.tmr = 0
+
+    def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが40~60, 80~100,,,の間、表示できるようにする
+        """
+        self.tmr += 1
+        self.gengeny -= 3.0
+        self.geny += 1.5
+        if 1 <= self.tmr < 21:
+            self.image = pg.Surface((300, 100), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            screen.blit(self.image, self.rect)
+        if self.tmr == 21 or reset:
+            self.kill() 
+
+
+class SideBeamFake(pg.sprite.Sprite):
+    """
+    予告ビームが出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        予告ビームの初期化
+        start_pos：スタート位置
+        """
+        super().__init__()
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.image.fill((255, 255, 0, 100))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        self.tmr = 0
+        self.sidebeam_voice = pg.mixer.Sound("./voice/sanzu_beam2.wav")
+        self.sidebeam_voice.play(0)
+
+    def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが0~20, 40~60, 80~100,,,の間、予告ビームを表示する
+        """
+        self.tmr += 1
+        screen.blit(self.image, self.rect)
+        if self.tmr == 20 or reset:
+            self.kill() 
+
+
+class SideWallReal(pg.sprite.Sprite):
+    """
+    横からビームが出てくるクラス
+    """
+    def __init__(self, start_pos: tuple[int, int]):
+        """
+        横からビームの初期化
+        start_pos：スタート位置
+        """
+        super().__init__()
+        self.genx = 0
+        self.geny = 0
+        self.gengeny = 100
+        self.pos = start_pos
+
+        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        self.tmr = 0
+
+    def update(self, screen, reset=False):
+        """
+        mainのattack_tmrが40~60, 80~100,,,の間、表示できるようにする
+        """
+        self.tmr += 1
+        self.gengeny -= 3.0
+        self.geny += 1.5
+        if 1 <= self.tmr < 21:
+            self.image = pg.Surface((300, 100), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            screen.blit(self.image, self.rect)
+        if self.tmr == 21 or reset:
+            self.kill() 
+
+
 class Bound_Beam(pg.sprite.Sprite):
     def __init__(self,color: tuple[int, int, int], start_pos: tuple[int, int]):  # コンストラクタ。開始位置と半径を引数に取ります。
         """
@@ -1036,6 +1176,8 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
+    sidebeamr = pg.sprite.Group()
+    sidebeamf = pg.sprite.Group()
     beamw = pg.sprite.Group()
     beamh = pg.sprite.Group()    
     bound_beam = pg.sprite.Group()
@@ -1059,7 +1201,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 2  # 攻撃の種類に関する変数
+    attack_num = 3  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
 
@@ -1310,7 +1452,7 @@ def main():
 
                 elif attack_rand == 1:
                     """
-                    以下に各自攻撃の処理を行う
+                    バウンドビームの作成
                     """
                     if attack_tmr == 0:
                         for _ in range(6):
@@ -1323,7 +1465,11 @@ def main():
                             else:
                                 hp.hp -= 3
                             heart.invincible = True
+
                 elif attack_rand == 2:
+                    """
+                    上下左右ビームの作成
+                    """
                     if attack_tmr % 10 == 0:
                         start_pos2 = (0,random.randint(HEIGHT/2-50,HEIGHT/2+250))
                         speed = (+20, 0)
@@ -1341,10 +1487,32 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
                 
+                elif attack_rand == 3:
+                    """
+                    予告ビームと横からビームの作成
+                    """
+                    # 横からビームの発生
+                    if attack_tmr % 40 == 0:  # 一定時間ごとにビームを生成
+                        start_pos = (WIDTH/2, random.choice([HEIGHT/2, HEIGHT/2+100, HEIGHT/2+200]))
+                        # 予告ビームの表示
+                        sidebeamf.add(SideBeamFake(start_pos))
+                    elif attack_tmr % 40 == 39:
+                        # 横からビームの表示
+                        sidebeamr.add(SideWallReal(start_pos))
+                    # ビームとの衝突判定
+                    if len(pg.sprite.spritecollide(heart, sidebeamr, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 4:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 4
+                            heart.invincible = True
                 """
                 クラスの更新を行う
                 """
                 # 以下に攻撃に関するクラスの更新
+                
+                sidebeamf.update(screen)
 
                 kkton.update(screen)
                 key_lst = pg.key.get_pressed()
@@ -1356,6 +1524,7 @@ def main():
                 bound_beam.update(screen)
                 beamw.update(screen)
                 beamh.update(screen)
+                sidebeamr.update(screen)
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1364,6 +1533,8 @@ def main():
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
+                    sidebeamr.update(screen, True)
+                    sidebeamf.update(screen, True)
                     beamw.update(screen, True)
                     beamh.update(screen, True)
                     bound_beam.update(screen,True)
@@ -1487,6 +1658,9 @@ def main():
                 beamw.update(screen, True)
                 beamh.update(screen, True)
                 bound_beam.update(screen,True)
+                sidebeamr.update(screen, True)
+                sidebeamf.update(screen, True)
+                rakutan.update(screen, True)
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
@@ -1496,8 +1670,8 @@ def main():
                 sound.play(-1)
                 gameschange = 0
                 scenechange = 1
+                
             gameover_tmr += 1
-            
 
         elif scenechange == 3:
             """
