@@ -989,7 +989,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 1  # 攻撃の種類に関する変数
+    attack_num = 3  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
 
@@ -1238,7 +1238,7 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                elif attack_rand == 1:
+                elif attack_rand == 3:
                     """
                     以下に各自攻撃の処理を行う
                     """
