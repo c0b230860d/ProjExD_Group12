@@ -1178,110 +1178,6 @@ class SideWallReal(pg.sprite.Sprite):
             self.kill() 
 
 
-class SideBeamFake(pg.sprite.Sprite):
-    """
-    予告ビームが出てくるクラス
-    """
-    def __init__(self, start_pos: tuple[int, int]):
-        """
-        予告ビームの初期化
-        start_pos：スタート位置
-        """
-        super().__init__()
-
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
-        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
-        self.image.fill((255, 255, 0, 100))
-        self.rect = self.image.get_rect()
-        self.rect.center = start_pos
-
-        self.tmr = 0
-        self.sidebeam_voice = pg.mixer.Sound("./voice/sanzu_beam2.wav")
-        self.sidebeam_voice.play(0)
-
-    def update(self, screen, reset=False):
-        """
-        mainのattack_tmrが0~20, 40~60, 80~100,,,の間、予告ビームを表示する
-        """
-        self.tmr += 1
-        screen.blit(self.image, self.rect)
-        if self.tmr == 20 or reset:
-            self.kill() 
-
-
-class SideWallReal(pg.sprite.Sprite):
-    """
-    横からビームが出てくるクラス
-    """
-    def __init__(self, start_pos: tuple[int, int]):
-        """
-        横からビームの初期化
-        start_pos：スタート位置
-        """
-        super().__init__()
-        self.genx = 0
-        self.geny = 0
-        self.gengeny = 100
-        self.pos = start_pos
-
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
-        pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
-        self.rect = self.image.get_rect()
-        self.rect.center = start_pos
-
-        self.tmr = 0
-
-    def update(self, screen, reset=False):
-        """
-        mainのattack_tmrが40~60, 80~100,,,の間、表示できるようにする
-        """
-        self.tmr += 1
-        self.gengeny -= 3.0
-        self.geny += 1.5
-        if 1 <= self.tmr < 21:
-            self.image = pg.Surface((300, 100), pg.SRCALPHA)
-            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
-            self.rect = self.image.get_rect()
-            self.rect.center = self.pos
-            screen.blit(self.image, self.rect)
-        if self.tmr == 21 or reset:
-            self.kill() 
-
-
-class Bound_Beam(pg.sprite.Sprite):
-    def __init__(self,color: tuple[int, int, int], start_pos: tuple[int, int]):  # コンストラクタ。開始位置と半径を引数に取ります。
-        """
-        引数に基づきボールSurfaceを生成する
-        start_pos：スタート位置
-        radius：ボールの半径
-        """
-        super().__init__()  # 親クラスのコンストラクタを呼び出します。
-        self.vx = random.uniform(-7, 7)  # x方向の速度をランダムに設定
-        self.vy = random.uniform(-7, 7)  # y方向の速度をランダムに設定
-        self.radius = 10
-        self.image = pg.Surface((self.radius * 2, self.radius * 2),pg.SRCALPHA)
-        pg.draw.circle(self.image, color, (self.radius, self.radius), self.radius)
-        self.rect = self.image.get_rect()
-        self.rect.center = start_pos
-
-    def update(self, screen: pg.Surface,reset=False):  # updateメソッド。画面Surfaceを引数に取ります。
-        """
-        引数1 screen：画面Surface
-        """
-        self.rect.move_ip(self.vx, self.vy)
-
-        # 画面の端に当たった場合、速度の方向を反転させます。
-        self.rect.move_ip(self.vx, self.vy)
-        screen.blit(self.image, self.rect)
-        bound_x, bound_y = check_bound2(self.rect)
-        if not bound_x:
-            self.vx = -self.vx
-        if not bound_y:
-            self.vy = -self.vy
-        if reset:
-            self.kill()
-
-
 class Bound_Beam(pg.sprite.Sprite):
     def __init__(self,color: tuple[int, int, int], start_pos: tuple[int, int]):  # コンストラクタ。開始位置と半径を引数に取ります。
         """
@@ -1981,7 +1877,6 @@ def main():
                     gameschange = 12
                     sound.stop()
                 else:
-                    print(no_attack_num)
                     afterchoice = AfterChoice(["＊　にがせない !", "＊　こうかとんはにやにやしている"])
                     afterchoice.draw(screen, True)
                 kkton.update(screen)  # こうかとんの表示
@@ -1995,7 +1890,6 @@ def main():
                         return
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
-                            # if no_attack == False
                             select_voice.play(0)
                             return
 
