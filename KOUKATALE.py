@@ -1261,9 +1261,6 @@ def main():
                     """
                     以下は攻撃の描画を行う例である。
                     """
-                    """
-                    予告ビームと横からビームの作成
-                    """
                     # 落単ビームの発生
                     if attack_tmr % 9 == 0:  # 一定時間ごとにビームを生成
                         start_pos = (random.randint(WIDTH/2-100,WIDTH/2+100), 40)
@@ -1277,9 +1274,9 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                if attack_rand == 3:
+                elif attack_rand == 3:
                     """
-                    以下に各自攻撃の処理を行う
+                    予告ビームと横からビームの作成
                     """
                     # 横からビームの発生
                     if attack_tmr % 40 == 0:  # 一定時間ごとにビームを生成
