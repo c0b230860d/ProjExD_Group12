@@ -85,24 +85,51 @@ class Koukaton(pg.sprite.Sprite):
     """
     こうかとん表示に関するクラス
     """
-    img = pg.transform.rotozoom(
-        pg.image.load("fig/dot_kk_negate.png"),
-        0,1.5
-    )
+    # img = pg.transform.rotozoom(
+    #     pg.image.load("fig/dot_kk_negate.png"),
+    #     0,1.5
+    # )
     def __init__(self):
         """
         こうかとん画像Surfaceを生成する
         """
         super().__init__()
-        self.image = __class__.img
+        self.images = [
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate4.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
+        ]
+        self.image_index = 0
+        self.image = self.images[self.image_index]
+        # self.image = __class__.img
         self.rect: pg.Rect = self.image.get_rect()
         self.rect.center = WIDTH/2, HEIGHT/4+30
+        self.frame_count = 0
+        self.next = True
+        self.tmr = 0
 
     def update(self, screen: pg.Surface):
         """
         こうかとんを表示
         引数1 screen：画面サーファイス
         """
+        self.frame_count += 1
+        if self.frame_count % 5 == 0 and self.next == True:  # フレームごとに切り替え速度を調整
+            self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
+            if self.image_index == len(self.images)-1:
+                self.next = False
+        else:
+            self.tmr += 1
+            if self.tmr > 100:
+                self.next = True
+                self.tmr = 0
+            
+            
         screen.blit(self.image, self.rect)
 
     
@@ -690,7 +717,7 @@ class GameTitle:
         self.tmr += 1
 
 
-class GameEnd_ver_atk:
+class GameEndVerAtk:
     """
     こうかとんを倒したときに関するクラス
     """
@@ -709,9 +736,9 @@ class GameEnd_ver_atk:
     x = WIDTH/2
     y = HEIGHT/4+30
 
-    def __init__(self):
+    def __init__(self, kkton: 'Koukaton'):
         """
-        引数なし
+        引数1 kkton：こうかとんクラス
         """
         self.x = __class__.x
         self.y = __class__.y
@@ -729,7 +756,7 @@ class GameEnd_ver_atk:
         
         self.tmr = 0
         
-        self.talk = Talk()
+        self.talk = Talk(kkton)
 
         self.wave_amp = 0  # 波の振幅
         self.wave_freq = 0  # 波の周波数
@@ -820,29 +847,80 @@ class Talk:
         pg.image.load("fig/Speech_bubble.png"), 
         0, 0.3
         )
-    x = 4*WIDTH/7
+    # x = 4*WIDTH/7
     y = HEIGHT/6
 
-    def __init__(self):
+    def __init__(self, kkton:'Koukaton'):
+        """
+        引数1 kkton：こうかとんクラス
+        """
+        self.kkton = kkton
+
+        # ふきだしの設定
         self.img = __class__.img
         self.rect = self.img.get_rect()
-        self.rect.x = Talk.x
         self.rect.y = Talk.y
+        # self.max_width = self.rect.width - 20  # 吹き出し内の最大幅
 
         self.font = pg.font.Font(FONT, 20)
         self.index = 0
 
         self.voice = pg.mixer.Sound("./voice/sanzu_voice.wav")
 
-    def update(self, screen: pg.Surface, lines: str, len:int, tmr):
+    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int):
+        """
+        セリフを表示する
+        引数1 screen：画面Surface
+        引数2 lines：表示させたいセリフの文字列
+        引数3 len：文字列の長さ
+        引数4 tmr：表示しているときのタイマー
+        """
+        self.rect.x = self.kkton.rect.right
         screen.blit(self.img, self.rect)
         if self.index < len:
             if tmr % 2 == 0:
                 self.index += 1
                 self.voice.play(0)
-            
-        line_txt = self.font.render(lines[:self.index], True, (0, 0, 0))
-        screen.blit(line_txt, (__class__.x+80, __class__.y+30))
+
+        lines_list = lines[:self.index].split('\n')
+        y_offset = 0
+
+        for line in lines_list:
+            line_txt = self.font.render(line, True, (0, 0, 0))
+            screen.blit(line_txt, (self.kkton.rect.right + 80, __class__.y + 30 + y_offset))
+            y_offset += line_txt.get_height()  # 次の行のY座標を計算
+
+
+class Item:
+    """
+    アイテムの処理に関するクラス
+    """
+    def __init__(self):
+        self.dic = {
+            "＊　こうかとんエキス":15, 
+            "＊　こうかとんジュース":15, 
+            "＊　こうかとんエナジー":25, 
+            "＊　こうかとんドリンク":25,
+        }
+        self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
+        self.next = False
+
+    def cure(self, hp:"HealthBar", item: str, lst: list):
+        """
+        引数1 hp：HPの残り残量
+        引数2 item：なんのアイテムを使用したか
+        引数3 lst：残りの使えるアイテムのリスト
+        アイテムに応じた体力の回復を行う
+        """
+        if hp.max > hp.hp:
+            self.cure_voice.play(0)
+            hp.hp += self.dic[item]
+            if hp.hp > hp.max:
+                hp.hp = hp.max
+            lst.remove(item)
+            self.next = True
+        else:
+            self.next = False
 
 
 """
@@ -856,8 +934,8 @@ class AttackRakutan(pg.sprite.Sprite):
     def __init__(self, color: tuple[int, int, int],start_pos: tuple[int, int]):
         """
         引数に基づき攻撃Surfaceを生成する
-        color：色
-        start_pos：スタート位置
+        引数1 color：色指定
+        引数2 start_pos：スタート位置
         """
         super().__init__()
         self.vx, self.vy = 0, +10
@@ -867,7 +945,7 @@ class AttackRakutan(pg.sprite.Sprite):
         self.frct = self.label.get_rect()
         self.frct.center = start_pos
 
-        self.image = pg.Surface((100, 20), pg.SRCALPHA)
+        self.image = pg.Surface((100, 20))
         pg.draw.rect(self.image, color, (0, 0, 100, 20))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos        
@@ -875,6 +953,7 @@ class AttackRakutan(pg.sprite.Sprite):
     def update(self, screen: pg.Surface, reset=False):
         """
         引数1 screen：画面Surface
+        引数2 reset：リセット判定
         """
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
@@ -885,7 +964,106 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 うえの例をもとに以下にこうかとんが攻撃する内容についてのクラスを各自用意する
 """
-# AttackMinefieldクラスの定義
+class DreamEgg(pg.sprite.Sprite):
+    """
+    こうかとんの卵攻撃に関するクラス
+    """
+    def __init__(self, kkton: "Koukaton", heart: "Heart", angle = 0):
+        """
+        卵の初期化
+        引数1 kkton：こうかとんクラス
+        引数2 heart：ハートクラス
+        引数3 angle：ハートへのアングル
+        """
+        super().__init__()
+        # 卵（円）の設定
+        rad = 10
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (255, 255, 255)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+
+        # 座標の設定
+        self.rect.centerx = kkton.rect.centerx-40 # バッグから出ているように調整
+        self.rect.centery = kkton.rect.centery+kkton.rect.height//2-40
+        
+        # 場所と向きの設定
+        kkton.rect.x = random.randint(WIDTH/2-50, WIDTH/2+50)
+        self.vx, self.vy = calc_orientation(kkton.rect, heart.rect)
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        
+        self.speed = 10
+
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        DreamEggの描画
+        引数1 screen：画面Surface
+        引数2 reset：リセット用
+        """
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        screen.blit(self.image, self.rect)
+        if check_bound1(self.rect) != (True, True) or reset:
+            self.kill()
+
+
+class FollowingBeam(pg.sprite.Sprite):
+    """
+    追従するビームに関するクラス
+    """
+    def __init__(self, heart: "Heart", start_pos: tuple[int, int], angle = 0, follow = False):
+        """
+        ビームの初期化
+        引数1 heart：ハートクラス
+        引数2 angle：ハートへのアングル
+        引数3 follow：ハートに追従するか
+        """
+        super().__init__()
+
+        # ビームの四角形を描画
+        self.image = pg.Surface((100, 30))
+        pg.draw.rect(self.image, (255, 255, 255), (0, 0, 100, 30))
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+        if follow:  # 追従する場合
+            self.vx, self.vy = calc_orientation(self.rect, heart.rect)
+        else:  # 中心座標の場合
+            self.img = pg.Surface((0,0))
+            self.irect = self.img.get_rect()
+            self.irect.center = WIDTH/2, HEIGHT/2+100
+
+            self.vx, self.vy = calc_orientation(self.rect, self.irect)
+        
+        # 向きと設定
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+
+        # イメージの向きの設定
+        self.image = pg.transform.rotate(self.image, angle)
+
+        # 時間
+        self.tmr = 0
+    
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        DreamEggの描画
+        引数1 screen：画面Surface
+        引数2 reset：リセット用
+        """
+        screen.blit(self.image, self.rect)
+        if self.tmr > 10:
+            self.rect.move_ip(20*self.vx, 20*self.vy)
+        
+        if self.tmr > 50 or reset:
+            self.kill()
+        self.tmr += 1
+
+
 class Minefield(pg.sprite.Sprite):
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -908,6 +1086,7 @@ class Minefield(pg.sprite.Sprite):
     def draw(self):
         for bomb in self.bombs:
             pg.draw.rect(self.screen, self.WHITE, bomb.rect)
+
 
 class Explosion(pg.sprite.Sprite):
     EXPLOSION_COLOR = (194, 0, 0)
@@ -1172,6 +1351,7 @@ class Beam(pg.sprite.Sprite):
         screen.blit(self.image, self.rect)
         if check_bound1(self.rect) != (True, True) or reset:
             self.kill()  
+    
 
 def main():
     pg.display.set_caption("koukAtale")
@@ -1179,8 +1359,8 @@ def main():
     """
     ゲームのシーンを切り替えるための変数(Flag)
     """
-    scenechange = 0  # 0: タイトル, 1:ゲームプレイ, 2:ゲームオーバー 
-    gameschange = 0  # 0：選択画面, 1：攻撃
+    scenechange = 0  # 0: タイトル, 1:ゲームプレイ, 2:ゲームオーバー , 3:ゲームクリア
+    gameschange = 0  # 0：選択画面, 1：攻撃相手選択
     """
     以下クラスの初期化
     """
@@ -1188,7 +1368,7 @@ def main():
     heart = Heart((WIDTH/2, HEIGHT/2+100 ))
     # heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
     dialog = Dialogue()
-    gpa = random.uniform(1, 4)
+    gpa = random.uniform(2, 4)
     max_hp = int(gpa*20)
     hp = HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
     en_max_hp = 7957
@@ -1200,6 +1380,8 @@ def main():
     choice = Choice(choice_ls, 10, HEIGHT - 80)
     choice_attack_lst = ["＊　こうかとん"]
     choice_attack = AfterChoice(choice_attack_lst) 
+    choice_escape_ls = ["＊　にがす"]
+    choice_escape = AfterChoice(choice_escape_ls)
     choice_action_lst = [
         "＊　こうかとんを分析", 
         "＊　こうかとんと話す", 
@@ -1217,12 +1399,14 @@ def main():
     attack_bar = AttackBar(WIDTH-15, 300-(HEIGHT/2-50))
     gameov = GameOver(random.randint(0, 3))
     gameti = GameTitle()
-    gameend_atk = GameEnd_ver_atk()
+    gameend_atk = GameEndVerAtk(kkton)
+    item = Item()
+    talk = Talk(kkton)
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
-    
-    # AttackMinefieldのグループ
+    dream_egg = pg.sprite.Group()
+    follow_bream = pg.sprite.Group()
     minefield = Minefield(screen)
     explosion = Explosion(screen)
     sidebeamr = pg.sprite.Group()
@@ -1242,33 +1426,38 @@ def main():
     """
     効果音やBGMの変数を用意
     """
-    pygame.mixer.init()
+    pg.mixer.init()
     select_voice = pg.mixer.Sound("./voice/snd_select.wav")
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
-    cure_voice = pg.mixer.Sound("./voice/cure.wav")
     """
     その他必要な初期化
     """
-    attack_num = 4  # 攻撃の種類に関する変数
+    attack_num = 7  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
+    no_attack: bool = True  # 一度でも攻撃したかどうか
+    no_attack_num = 0  # 何回攻撃されたか
+    end_judg = 20  # 何回攻撃されたら見逃すかに関する変数
+    restart = False # リスタート判定
+    rand = 0
 
     # ゲーム開始
     while True:
         """
-        for文内では基本的にゲームのシーンの切り替えと
-        必要に応じてクラスの呼び出しに使用している
-        特に、使用しないなら最小化しておくべき
+        scenechange変数の値に応じた画面を表示する
         """
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                return
-            elif event.type == pg.KEYDOWN:
-                if scenechange == 0:
-                    """
-                    タイトル画面での処理
-                    """
+        screen.fill((0,0,0))  # 背景を描画
+
+        if scenechange == 0:  # タイトル画面
+            """
+            タイトル画面
+            """
+            # キー操作による状態遷移
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    return
+                elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_RETURN:
                         if gameti.end_title == 1:
                             gameti.end_title = 2
@@ -1277,14 +1466,20 @@ def main():
                             scenechange = 1
                             gameti.menu.stop()
                             sound.play(-1)
-                elif scenechange == 1:
-                    """
-                    ゲームをプレイ中での処理
-                    """
-                    if gameschange == 0:  
-                        """
-                        選択画面での処理
-                        """
+
+            gameti.update(screen)
+
+        elif scenechange == 1:  # ゲームプレイ画面
+            """
+            ゲームプレイシーン
+            gamechange変数に応じた画面を表示する
+            """
+            if gameschange == 0:  # 選択画面
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
                         choice.update(event.key)
                         if event.key == pg.K_RETURN:  # エンターキーを押されたら
                             if choice.index == 0:  # こうげきを選択していたら
@@ -1293,139 +1488,13 @@ def main():
                             elif choice.index == 1:  # こうどうを選択していたら
                                 select_voice.play(0)
                                 gameschange = 4
-                            elif choice.index == 2:  # アイテムを選択していたら
+                            elif choice.index == 2 and len(choice_item_lst) != 0:  # アイテムを選択していたら
                                 select_voice.play(0)
-                                if len(choice_item_lst) == 0:  # アイテムが無かったら
-                                    pass
-                                else:
-                                    gameschange = 5
+                                gameschange = 5
                             elif choice.index == 3:  # みのがすを選択していたら
-                                pass
-                    elif gameschange == 1:  
-                        """
-                        攻撃相手を選択する画面での処理
-                        """    
-                        if event.key == pg.K_ESCAPE:
-                            gameschange = 0
-                        elif event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 2
-                    elif gameschange == 2:
-                        """
-                        アタックバーが表示されている画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            atk = True 
-                    elif gameschange == 4:
-                        """
-                        こうどうが表示されている画面での処理
-                        """
-                        choice_action.update(event.key)
-                        if event.key == pg.K_ESCAPE:
-                            select_voice.play(0)
-                            gameschange = 0
-                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
-                            if choice_action.index == 0:
                                 select_voice.play(0)
-                                gameschange = 6
-                            elif choice_action.index == 1:
-                                select_voice.play(0)
-                                gameschange = 7
-                            elif choice_action.index == 2:
-                                select_voice.play(0)
-                                gameschange = 8
-                            elif choice_action.index == 3:
-                                select_voice.play(0)
-                                gameschange = 9 
-                    elif gameschange == 5:
-                        """
-                        アイテムが表示されている画面での処理
-                        """
-                        choice_item.update(event.key)
-                        if event.key == pg.K_ESCAPE:
-                            select_voice.play(0)
-                            gameschange = 0
-                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
-                            if choice_item.index == 0:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[0]
-                            elif choice_item.index == 1:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[1]
-                                choice_item.index = 0
-                            elif choice_item.index == 2:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[2]
-                                choice_item.index = 0
-                            elif choice_item.index == 3:
-                                cure_voice.play(0)
-                                gameschange = 3
-                                if max_hp > hp.hp + 10:
-                                    hp.hp += 10
-                                else:
-                                    hp.hp = max_hp
-                                del choice_item_lst[3]
-                                choice_item.index = 0
-                    elif gameschange == 6:
-                        """
-                        「こうかとんを分析」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 7:
-                        """
-                        「こうかとんと話す」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 8:
-                        """
-                        「こうかとんを焼く」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-                    elif gameschange == 9:
-                        """
-                        「こうかとんを説得する」を表示する画面での処理
-                        """
-                        if event.key == pg.K_RETURN:
-                            select_voice.play(0)
-                            gameschange = 3
-        
-        """
-        scenechange変数の値に応じた画面を表示する
-        """
-        screen.fill((0,0,0))  # 背景を描画
-
-        if scenechange == 0:
-            """
-            タイトル画面
-            """
-            gameti.update(screen)
-
-        elif scenechange == 1:
-            """
-            ゲームプレイシーン
-            """
-            if gameschange == 0:  # 選択画面
+                                gameschange = 10
+                attack_rand = random.randint(0, attack_num)
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1434,24 +1503,47 @@ def main():
                 hp.update()  # 残り体力を更新
                 choice.draw(screen)  # 選択肢の対か
             
-            elif gameschange == 1:  # こうげきを選択した場合
+            elif gameschange == 1:  # 「こうげき」を選択した場合
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            gameschange = 0
+                        elif event.key == pg.K_RETURN:
+                            select_voice.play(0)
+                            gameschange = 2
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
-                afterchoice = AfterChoice(["＊　こうかとん"])  # 攻撃相手のリストを渡す
-                afterchoice.draw(screen)  # 渡したリストを表示
+                choice_attack.draw(screen)  # 渡したリストを表示
                 kkton.update(screen)  # こうかとんの表示
                 hp.draw(screen)  # 残り体力の描画
                 hp.update()  # 残り体力の更新
                 choice.draw(screen)  # 選択肢の更新
 
             elif gameschange == 2:  # アタックバー画面
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                atk = True
+
+                if en_hp.hp <= 0: # 敵の体力が0になったら
+                    sound.stop()
+                    scenechange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんの表示
                 if atk:  # atkが有効かされたら 
+                    no_attack = False
                     attack_bar.stop()  # バーを止める
                     if select_tmr == 0:
                         attack_voice.play(0)
                     if select_tmr == 3:
-                        atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < select_tmr < 30:
                         en_hp.draw(screen, atk_value)
@@ -1459,7 +1551,7 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = 4#random.randint(0, attack_num)
+                        attack_rand = random.randint(0, attack_num)
                         gameschange = 3
                     select_tmr += 1
                 else:
@@ -1469,6 +1561,10 @@ def main():
                 choice.draw(screen)  # 選択肢の表示
 
             elif gameschange == 3:  # 攻撃される画面
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
                 """
                 以下にこうかとんの攻撃画面が表示される。
                 攻撃の描画やあたり判定などはここで行うこと
@@ -1482,12 +1578,29 @@ def main():
                     breakheart = BreakHeart(heart.rect.x, heart.rect.y)
                     scenechange = 2
 
+                if no_attack and attack_tmr < 75:  # 平和end用
+                    if no_attack_num == end_judg//2:
+                        lines = "キミ、こうげきしてこないね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num == 2*end_judg//3:
+                        lines = "もしかして\nこうげきしなかったら\n単位もらえると思ってる？"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num == 4*end_judg//5:
+                        lines = "ﾌﾌﾌ...\nキミ本当にやさしいね\nそろそろ僕もつかれてきたな"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num == end_judg:
+                        lines = "わかったよ\nキミの願いをかなえてあげるよ\nまた遊ぼうね"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+                    elif no_attack_num > end_judg:
+                        lines = "何してるんだい？\n遊べて楽しかったよ\n早くお逃げ"
+                        talk.update(screen,lines,len(lines), attack_tmr)
+
                 if attack_rand == 0:
                     """
                     以下は攻撃の描画を行う例である。
                     """
                     # 落単ビームの発生
-                    if attack_tmr % 9 == 0:  # 一定時間ごとにビームを生成
+                    if attack_tmr % 11 == 0:  # 一定時間ごとにビームを生成
                         start_pos = (random.randint(WIDTH/2-100,WIDTH/2+100), 40)
                         rakutan.add(AttackRakutan((255, 255, 255), start_pos))
                     # 落単との衝突判定
@@ -1499,7 +1612,7 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                elif attack_rand == 1:
+                elif attack_rand == 1:  
                     """
                     バウンドビームの作成
                     """
@@ -1533,7 +1646,7 @@ def main():
                             if hp.hp < 3:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 3
+                                hp.hp -= 2
                             heart.invincible = True
                 
                 elif attack_rand == 3:
@@ -1554,10 +1667,13 @@ def main():
                             if hp.hp < 4:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 4
+                                hp.hp -= 5
                             heart.invincible = True
                 
                 elif attack_rand == 4:
+                    """
+                    地雷原の作成
+                    """
                     if (attack_tmr + 1) % 30 == 0: # haiti
                         minefield.place_bombs()
                     elif (attack_tmr + 1) % 30 == 21: # bakuha
@@ -1573,9 +1689,71 @@ def main():
                             if hp.hp < 3:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 3
+                                hp.hp -= 1
                             heart.invincible = True
                 
+                elif attack_rand == 5:
+                    """
+                    卵ぶんぶん
+                    """
+                    if attack_tmr % 4 == 0:
+                        # pass
+                        dream_egg.add(DreamEgg(kkton, heart))
+                    if len(pg.sprite.spritecollide(heart, dream_egg, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 1
+                            heart.invincible = True
+
+                elif attack_rand == 6:
+                    """
+                    中心大回転ビーム
+                    """
+                    if attack_tmr % 4 == 0:
+                        pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
+                        num = pi_lst[rand%(14*2-1)]
+                        x = math.cos(num)*200
+                        y = math.sin(num)*200
+
+                        start_pos = (WIDTH/2+x, HEIGHT/2+50+y)
+                        follow_bream.add(FollowingBeam(heart, start_pos, 0))
+                        rand += 1
+
+                    if len(pg.sprite.spritecollide(heart, follow_bream, False)) != 0:
+                        for beam in follow_bream:
+                            if pg.sprite.collide_mask(heart, beam):
+                                if heart.invincible == False:
+                                    if hp.hp < 3:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 5
+                                    heart.invincible = True
+
+                elif attack_rand == 7:
+                    """
+                    追従ビーム
+                    """
+                    if attack_tmr % 15 == 0:
+                        pi_lst = [i * math.pi/14 for i in range(0, 14*2-1)]
+                        num = pi_lst[random.randint(0, len(pi_lst)-1)]
+                        x = math.cos(num)*200
+                        y = math.sin(num)*200
+
+                        start_pos = (heart.rect.centerx+x, heart.rect.centery+y)
+                        follow_bream.add(FollowingBeam(heart, start_pos, 0, True))
+
+                    if len(pg.sprite.spritecollide(heart, follow_bream, False)) != 0:
+                        for beam in follow_bream:
+                            if pg.sprite.collide_mask(heart, beam):
+                                if heart.invincible == False:
+                                    if hp.hp < 3:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 2
+                                    heart.invincible = True
+
                 """
                 クラスの更新を行う
                 """
@@ -1594,6 +1772,9 @@ def main():
                 beamw.update(screen)
                 beamh.update(screen)
                 sidebeamr.update(screen)
+                dream_egg.update(screen)
+                follow_bream.update(screen)
+                
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1607,44 +1788,86 @@ def main():
                     beamw.update(screen, True)
                     beamh.update(screen, True)
                     bound_beam.update(screen,True)
+                    dream_egg.update(screen, True)
+                    follow_bream.update(screen, True)
+                    kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
+                    talk.index = 0
+                    no_attack_num += 1
                 attack_tmr += 1
 
-            elif gameschange == 4:  
+            elif gameschange == 4:  # 「こうどう」を選択した場合
                 """
                 どの行動をとるのかの選択を表示する
                 """
-                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
-                # 選択肢後の画面に関する初期化
-                kkton.update(screen)
-                # 行動の選択画面
-                choice_action.draw(screen)
-                # 体力バーの更新
-                hp.draw(screen)
-                hp.update()
-                # 選択肢の更新
-                choice.draw(screen)
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        choice_action.update(event.key)
+                        if event.key == pg.K_ESCAPE:
+                            select_voice.play(0)
+                            gameschange = 0
+                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
+                            if choice_action.index == 0:
+                                select_voice.play(0)
+                                gameschange = 6
+                            elif choice_action.index == 1:
+                                select_voice.play(0)
+                                gameschange = 7
+                            elif choice_action.index == 2:
+                                select_voice.play(0)
+                                gameschange = 8
+                            elif choice_action.index == 3:
+                                select_voice.play(0)
+                                gameschange = 9 
 
-            elif gameschange == 5:
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                kkton.update(screen)  # こうかとんの描画
+                choice_action.draw(screen)  # 行動の選択肢の描画
+                hp.draw(screen)  # 体力バーの描画
+                choice.draw(screen)  # 選択肢の更新
+
+            elif gameschange == 5:  # 「アイテム」の画面
                 """
                 どのアイテムを選ぶのかの選択を表示する
                 """
-                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
-                # 選択肢後の画面に関する初期化
-                kkton.update(screen)
-                # アイテムの選択画面
-                choice_item.draw(screen)
-                # 体力バーの更新
-                hp.draw(screen)
-                hp.update()
-                # 選択肢の更新
-                choice.draw(screen)
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        choice_item.update(event.key)
+                        if event.key == pg.K_ESCAPE:
+                            select_voice.play(0)
+                            gameschange = 0
+                        if event.key == pg.K_RETURN:  # エンターキーを押されたら
+                            item.cure(hp, choice_item_lst[choice_item.index], choice_item_lst)
+                            if item.next:
+                                choice_item.index = 0
+                                gameschange=3
 
-            elif gameschange == 6:
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                kkton.update(screen)  # こうかとんの描画
+                choice_item.draw(screen)  # アイテムの描画
+                hp.draw(screen)  # 体力の描画
+                choice.draw(screen)  # 選択肢の描画
+
+            elif gameschange == 6:  # 分析の選択
                 """
                 「こうかとんを分析する」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとん:Attack 3 Diffence 100", "こうかとん、それはこの世の支配者、、、"])   
@@ -1657,10 +1880,18 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 7:
+            elif gameschange == 7:  # 話すの選択
                 """
                 「こうかとんと話す」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんは、話を聞いてくれないようだ", "こうかとん：「貴様ごときが口を開くな」"])   
@@ -1673,10 +1904,19 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 8:
+            elif gameschange == 8:  # 焼くの選択
                 """
                 「こうかとんを焼く」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
+
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんにそんなことをしてはいけない", "こうかとん：「なめた物言いだな、、、」"])   
@@ -1689,10 +1929,18 @@ def main():
                 # 選択肢の更新
                 choice.draw(screen)
 
-            elif gameschange == 9:
+            elif gameschange == 9:  # 説得の選択
                 """
                 「こうかとんを説得する」を選択した後の画面の表示
                 """
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                                select_voice.play(0)
+                                gameschange = 3
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 # 選択肢後の画面に関する初期化
                 afterchoice = AfterChoice(["こうかとんは聞く耳を持たない", "こうかとん：「ふんっ」"])   
@@ -1701,28 +1949,94 @@ def main():
                 afterchoice.draw(screen, True)
                 # 体力バーの更新
                 hp.draw(screen)
-                hp.update()
                 # 選択肢の更新
                 choice.draw(screen)
 
-        elif scenechange == 2:
+            elif gameschange == 10:  # 「みのがす」を選択した場合
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            gameschange = 0
+                        elif event.key == pg.K_RETURN:
+                            select_voice.play(0)
+                            gameschange = 11
+
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
+                choice_escape.draw(screen)  # 渡したリストを表示
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)  # 残り体力の描画
+                choice.draw(screen)  # 選択肢の更新
+            
+            elif gameschange == 11:  # にがすを選択(にがせない場合)
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            select_voice.play(0)
+                            gameschange = 3
+                
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                if no_attack and no_attack_num > end_judg:
+                    gameschange = 12
+                    sound.stop()
+                else:
+                    print(no_attack_num)
+                    afterchoice = AfterChoice(["＊　にがせない !", "＊　こうかとんはにやにやしている"])
+                    afterchoice.draw(screen, True)
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)
+                choice.draw(screen)
+
+            elif gameschange == 12:
+                # キー操作による状態遷移
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            # if no_attack == False
+                            select_voice.play(0)
+                            return
+
+                pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
+                afterchoice = AfterChoice(["＊　YOU WIN !", "＊　GPAと単位を かくとく！"])
+                afterchoice.draw(screen, True)
+                kkton.update(screen)  # こうかとんの表示
+                hp.draw(screen)
+                choice.draw(screen)
+
+        elif scenechange == 2:  # ゲームオーバー画面
             """
             ゲームオーバーシーン
             プレイヤーのHPが0以下になったら実行される
             """
+            # キー操作による状態遷移
+            for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_RETURN:
+                            restart = True
+
             if gameover_tmr < 50:
                 breakheart.update(screen)
             elif gameover_tmr == 50:
                 sound = pg.mixer.Sound("./sound/gameover.mp3")
                 sound.play(-1)
-            elif 50 < gameover_tmr <= 400:
+            elif 50 < gameover_tmr:
                 gameov.update(screen)
-            elif gameover_tmr > 400:
+            if gameover_tmr > 100 and restart:
                 # 怒涛の初期化
                 sound.stop()
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
-                # beams.update(screen, True)
-                # barrages.update(True)
+                rakutan.update(screen, True)
+                dream_egg.update(screen, True)
+                follow_bream.update(screen, True)
                 rakutan.update(screen, True)
                 beamw.update(screen, True)
                 beamh.update(screen, True)
@@ -1730,22 +2044,37 @@ def main():
                 sidebeamr.update(screen, True)
                 sidebeamf.update(screen, True)
                 rakutan.update(screen, True)
+                kkton.rect.centerx = WIDTH/2
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
                 select_tmr = 0
+                choice_item_lst = [
+                    "＊　こうかとんエキス", 
+                    "＊　こうかとんジュース", 
+                    "＊　こうかとんエナジー", 
+                    "＊　こうかとんドリンク",
+                    ]
+                choice_item = (AfterChoice(choice_item_lst))
                 gameov.update(screen, True)
                 sound = pg.mixer.Sound("./sound/Megalovania.mp3")
                 sound.play(-1)
+                talk.index = 0
+                no_attack: bool = True  # 一度でも攻撃したかどうか
+                no_attack_num = 0  # 何回攻撃されたか
                 gameschange = 0
                 scenechange = 1
-                
+                restart = False
             gameover_tmr += 1
 
-        elif scenechange == 3:
+        elif scenechange == 3:  # ゲームエンド画面
             """
             ゲーム終了
             """
+            # キー操作による状態遷移
+            for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
             pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
             gameend_atk.update(screen)
             hp.draw(screen)
