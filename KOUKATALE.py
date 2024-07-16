@@ -1425,6 +1425,10 @@ def main():
                                 select_voice.play(0)
                                 gameschange = 10
                 attack_rand = random.randint(0, attack_num)
+                if attack_rand == 8:
+                    heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
+                else:
+                    heart = Heart((WIDTH/2, HEIGHT/2+100))
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1481,11 +1485,6 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = random.randint(0, attack_num)
-                        # if attack_rand == 8:
-                        #     heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
-                        # else:
-                        #     heart = Heart((WIDTH/2, HEIGHT/2+100))
                         gameschange = 3
                     select_tmr += 1
                 else:
