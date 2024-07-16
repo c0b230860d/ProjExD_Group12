@@ -1492,7 +1492,7 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
-                attack_rand = 4#random.randint(0, attack_num)
+                attack_rand = random.randint(0, attack_num)
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
