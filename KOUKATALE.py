@@ -1492,7 +1492,7 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
-                attack_rand = random.randint(0, attack_num)
+                attack_rand = 4 #random.randint(0, attack_num)
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1615,7 +1615,7 @@ def main():
                     """
                     if attack_tmr == 0:
                         for _ in range(6):
-                            start_pos = (WIDTH//2,WIDTH//2)
+                            start_pos = (WIDTH//2,HEIGHT//2-25)
                             bound_beam.add(Bound_Beam((255,255,255),start_pos))
                     if len(pg.sprite.spritecollide(heart, bound_beam, False)) != 0:
                         if heart.invincible == False:
@@ -1676,7 +1676,7 @@ def main():
                     elif (attack_tmr + 1) % 30 == 21: # bakuha
                         explosion.create_explosions(minefield.bombs)
 
-                    if 0 <= (attack_tmr + 1) % 30 <= 20: # next
+                    if 0 <= (attack_tmr + 1) % 30 <= 22: # next
                         minefield.draw()
                     else: 
                         explosion.draw()
