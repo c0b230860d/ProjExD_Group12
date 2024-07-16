@@ -1541,7 +1541,7 @@ def main():
                     if select_tmr == 0:
                         attack_voice.play(0)
                     if select_tmr == 3:
-                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < select_tmr < 30:
                         en_hp.draw(screen, atk_value)
