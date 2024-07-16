@@ -283,6 +283,24 @@ class HeartGrav(pg.sprite.Sprite):
                     screen.blit(self.image, self.rect)
         else:
             screen.blit(self.image, self.rect)
+        
+    # def check_bound2(obj_rct:pg.Rect) -> tuple[bool, bool]:
+    #     """
+    #     引数:ハートRect
+    #     戻り値:タプル(横方向判定結果, 縦方向判定結果)
+    #     行動範囲内ならTrue, 行動範囲外ならFalseを返す
+    #     """
+    #     yoko, tate = True, True
+    #     if obj_rct.left < WIDTH/2-150+5 or WIDTH/2+150-5 < obj_rct.right:  # 横判定
+    #         yoko = False
+    #     if obj_rct.top < HEIGHT/2-50+5 or (HEIGHT/2-50)+300-5 < obj_rct.bottom:  # 縦判定
+    #         tate = False
+    #     return yoko, tate
+    
+    # def check_bound_grav(heart_rct:pg.Rect, obj_rct:pg.Rect) -> tuple[bool, bool]:
+    #     yoko, tate = True, True
+    #     if obj_rct:
+    #         if heart_rct.left < obj_rct.right or heart_rct.right > 
 
 
 class HealthBar:
@@ -1350,7 +1368,41 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
         if check_bound1(self.rect) != (True, True) or reset:
-            self.kill()  
+            self.kill()
+
+
+class SideDeny(pg.sprite.Sprite):
+    def __init__(self, speed: list[int, int], left=False):
+        super().__init__()
+        if left:
+            self.genx = 0
+            self.geny = 0
+            self.gengeny = 100
+            self.pos = (100, HEIGHT/2+225)
+            self.image = pg.Surface((20, 50), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            self.vx, self.vy = speed
+        else:
+            self.genx = 0
+            self.geny = 0
+            self.gengeny = 100
+            self.pos = (WIDTH-100, HEIGHT/2+225)
+            self.image = pg.Surface((20, 50), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            self.vx, self.vy = speed
+
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        引数1 screen：画面Surface
+        """
+        self.rect.move_ip(self.vx, self.vy)
+        screen.blit(self.image, self.rect)
+        if check_bound1(self.rect) != (True, True) or reset:
+            self.kill()
     
 
 def main():
@@ -1414,7 +1466,7 @@ def main():
     beamw = pg.sprite.Group()
     beamh = pg.sprite.Group()    
     bound_beam = pg.sprite.Group()
-
+    sidedeny = pg.sprite.Group()
     """
     以下それぞれのシーンのタイマーを用意
     もし用意したければここに追加してください
@@ -1433,7 +1485,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 7  # 攻撃の種類に関する変数
+    attack_num = 8  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1552,6 +1604,10 @@ def main():
                         atk = False
                         attack_bar.vx = +1
                         attack_rand = random.randint(0, attack_num)
+                        if attack_rand == 8:
+                            heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
+                        else:
+                            heart = Heart((WIDTH/2, HEIGHT/2+100))
                         gameschange = 3
                     select_tmr += 1
                 else:
@@ -1754,6 +1810,21 @@ def main():
                                         hp.hp -= 2
                                     heart.invincible = True
 
+                elif attack_rand == 8:
+                    if attack_tmr % 30 == 0:
+                        speed_x = random.randint(5, 15)
+                        speed = [speed_x, 0]
+                        speed2 = [-speed_x, 0]
+                        sidedeny.add(SideDeny(speed, True))
+                        sidedeny.add(SideDeny(speed2))
+                    if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 2
+                            heart.invincible = True
+
                 """
                 クラスの更新を行う
                 """
@@ -1774,6 +1845,7 @@ def main():
                 sidebeamr.update(screen)
                 dream_egg.update(screen)
                 follow_bream.update(screen)
+                sidedeny.update(screen)
                 
                 if attack_tmr > 300: # 選択画面に戻る
                     """
@@ -1782,6 +1854,7 @@ def main():
                     dialog.update(screen, True)
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
+                    # heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
                     sidebeamr.update(screen, True)
                     sidebeamf.update(screen, True)
@@ -1790,6 +1863,7 @@ def main():
                     bound_beam.update(screen,True)
                     dream_egg.update(screen, True)
                     follow_bream.update(screen, True)
+                    sidedeny.update(screen, True)
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
