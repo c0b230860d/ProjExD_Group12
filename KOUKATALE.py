@@ -1107,7 +1107,7 @@ class Explosion(pg.sprite.Sprite):
         for explosion in self.explosions:
             pg.draw.circle(self.screen, self.EXPLOSION_COLOR, explosion.rect.center, 30)
         
-        print(self.explosions)
+        # print(self.explosions)
 
 
 class SideBeamFake(pg.sprite.Sprite):
