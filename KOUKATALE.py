@@ -886,6 +886,40 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 
 
+class Bound_Beam(pg.sprite.Sprite):
+    def __init__(self,color: tuple[int, int, int], start_pos: tuple[int, int]):  # コンストラクタ。開始位置と半径を引数に取ります。
+        """
+        引数に基づきボールSurfaceを生成する
+        start_pos：スタート位置
+        radius：ボールの半径
+        """
+        super().__init__()  # 親クラスのコンストラクタを呼び出します。
+        self.vx = random.uniform(-7, 7)  # x方向の速度をランダムに設定
+        self.vy = random.uniform(-7, 7)  # y方向の速度をランダムに設定
+        self.radius = 10
+        self.image = pg.Surface((self.radius * 2, self.radius * 2),pg.SRCALPHA)
+        pg.draw.circle(self.image, color, (self.radius, self.radius), self.radius)
+        self.rect = self.image.get_rect()
+        self.rect.center = start_pos
+
+    def update(self, screen: pg.Surface,reset=False):  # updateメソッド。画面Surfaceを引数に取ります。
+        """
+        引数1 screen：画面Surface
+        """
+        self.rect.move_ip(self.vx, self.vy)
+
+        # 画面の端に当たった場合、速度の方向を反転させます。
+        self.rect.move_ip(self.vx, self.vy)
+        screen.blit(self.image, self.rect)
+        bound_x, bound_y = check_bound2(self.rect)
+        if not bound_x:
+            self.vx = -self.vx
+        if not bound_y:
+            self.vy = -self.vy
+        if reset:
+            self.kill()
+
+
 def main():
     pg.display.set_caption("koukAtale")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -934,6 +968,7 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
+    bound_beam = pg.sprite.Group()
 
     """
     以下それぞれのシーンのタイマーを用意
@@ -1203,11 +1238,21 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                if attack_rand == 1:
+                elif attack_rand == 1:
                     """
                     以下に各自攻撃の処理を行う
                     """
-                    pass
+                    if attack_tmr == 0:
+                        for _ in range(6):
+                            start_pos = (WIDTH//2,WIDTH//2)
+                            bound_beam.add(Bound_Beam((255,255,255),start_pos))
+                    if len(pg.sprite.spritecollide(heart, bound_beam, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 3
+                            heart.invincible = True
 
                 """
                 クラスの更新を行う
@@ -1220,7 +1265,8 @@ def main():
                 hp.draw(screen)
                 choice.draw(screen, True)
                 hp.update()
-                rakutan.update(screen) 
+                rakutan.update(screen)
+                bound_beam.update(screen)
                 if attack_tmr > 300: # 選択画面に戻る
                     """
                     タイマーが300以上になったら選択画面に戻るように設定している。
@@ -1229,6 +1275,7 @@ def main():
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
+                    bound_beam.update(screen,True)
                     gameschange = 0
                     select_tmr = 0
                 attack_tmr += 1
@@ -1345,6 +1392,7 @@ def main():
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
                 # beams.update(screen, True)
                 # barrages.update(True)
+                bound_beam.update(screen,True)
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
