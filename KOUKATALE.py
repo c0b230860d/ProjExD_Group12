@@ -927,6 +927,8 @@ class Explosion(pg.sprite.Sprite):
     def draw(self):
         for explosion in self.explosions:
             pg.draw.circle(self.screen, self.EXPLOSION_COLOR, explosion.rect.center, 30)
+        
+        print(self.explosions)
 
 
 class SideBeamFake(pg.sprite.Sprite):
@@ -1457,7 +1459,7 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = random.randint(0, attack_num)
+                        attack_rand = 4#random.randint(0, attack_num)
                         gameschange = 3
                     select_tmr += 1
                 else:
