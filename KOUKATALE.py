@@ -1106,6 +1106,8 @@ class Explosion(pg.sprite.Sprite):
     def draw(self):
         for explosion in self.explosions:
             pg.draw.circle(self.screen, self.EXPLOSION_COLOR, explosion.rect.center, 30)
+        
+        # print(self.explosions)
 
 
 class SideBeamFake(pg.sprite.Sprite):
@@ -1119,8 +1121,8 @@ class SideBeamFake(pg.sprite.Sprite):
         """
         super().__init__()
 
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
-        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.image = pg.Surface((300, 60), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 60))
         self.image.fill((255, 255, 0, 100))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
@@ -1135,7 +1137,7 @@ class SideBeamFake(pg.sprite.Sprite):
         """
         self.tmr += 1
         screen.blit(self.image, self.rect)
-        if self.tmr == 20 or reset:
+        if self.tmr == 10 or reset:
             self.kill() 
 
 
@@ -1151,10 +1153,10 @@ class SideWallReal(pg.sprite.Sprite):
         super().__init__()
         self.genx = 0
         self.geny = 0
-        self.gengeny = 100
+        self.gengeny = 60
         self.pos = start_pos
 
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        self.image = pg.Surface((300, 60), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
@@ -1168,13 +1170,13 @@ class SideWallReal(pg.sprite.Sprite):
         self.tmr += 1
         self.gengeny -= 3.0
         self.geny += 1.5
-        if 1 <= self.tmr < 21:
-            self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        if 1 <= self.tmr < 11:
+            self.image = pg.Surface((300, 60), pg.SRCALPHA)
             pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
             self.rect = self.image.get_rect()
             self.rect.center = self.pos
             screen.blit(self.image, self.rect)
-        if self.tmr == 21 or reset:
+        if self.tmr == 11 or reset:
             self.kill() 
 
 
@@ -1244,7 +1246,41 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
         if check_bound1(self.rect) != (True, True) or reset:
-            self.kill()  
+            self.kill()
+
+
+class SideDeny(pg.sprite.Sprite):
+    def __init__(self, speed: list[int, int], left=False):
+        super().__init__()
+        if left:
+            self.genx = 0
+            self.geny = 0
+            self.gengeny = 100
+            self.pos = (100, HEIGHT/2+225)
+            self.image = pg.Surface((20, 50), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            self.vx, self.vy = speed
+        else:
+            self.genx = 0
+            self.geny = 0
+            self.gengeny = 100
+            self.pos = (WIDTH-100, HEIGHT/2+225)
+            self.image = pg.Surface((20, 50), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            self.vx, self.vy = speed
+
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        引数1 screen：画面Surface
+        """
+        self.rect.move_ip(self.vx, self.vy)
+        screen.blit(self.image, self.rect)
+        if check_bound1(self.rect) != (True, True) or reset:
+            self.kill()
     
 
 def main():
@@ -1308,7 +1344,7 @@ def main():
     beamw = pg.sprite.Group()
     beamh = pg.sprite.Group()    
     bound_beam = pg.sprite.Group()
-
+    sidedeny = pg.sprite.Group()
     """
     以下それぞれのシーンのタイマーを用意
     もし用意したければここに追加してください
@@ -1327,7 +1363,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 7  # 攻撃の種類に関する変数
+    attack_num = 8  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1389,6 +1425,10 @@ def main():
                                 select_voice.play(0)
                                 gameschange = 10
                 attack_rand = random.randint(0, attack_num)
+                if attack_rand == 8:
+                    heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
+                else:
+                    heart = Heart((WIDTH/2, HEIGHT/2+100))
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1547,21 +1587,23 @@ def main():
                     予告ビームと横からビームの作成
                     """
                     # 横からビームの発生
-                    if attack_tmr % 40 == 0:  # 一定時間ごとにビームを生成
-                        start_pos = (WIDTH/2, random.choice([HEIGHT/2, HEIGHT/2+100, HEIGHT/2+200]))
+                    if attack_tmr % 20 == 0:  # 一定時間ごとにビームを生成
+                        start_pos = (WIDTH/2, random.choice([HEIGHT/2-20, HEIGHT/2+40, HEIGHT/2+100, HEIGHT/2+160, HEIGHT/2+220]))
                         # 予告ビームの表示
                         sidebeamf.add(SideBeamFake(start_pos))
-                    elif attack_tmr % 40 == 39:
+                    elif attack_tmr % 20 == 19:
                         # 横からビームの表示
                         sidebeamr.add(SideWallReal(start_pos))
                     # ビームとの衝突判定
                     if len(pg.sprite.spritecollide(heart, sidebeamr, False)) != 0:
-                        if heart.invincible == False:
-                            if hp.hp < 4:
-                                hp.hp = 0
-                            else:
-                                hp.hp -= 5
-                            heart.invincible = True
+                        for beam in sidebeamr:
+                            if pg.sprite.collide_mask(heart, beam):
+                                if heart.invincible == False:
+                                    if hp.hp < 4:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 5
+                                    heart.invincible = True
                 
                 elif attack_rand == 4:
                     """
@@ -1646,6 +1688,21 @@ def main():
                                         hp.hp -= 2
                                     heart.invincible = True
 
+                elif attack_rand == 8:
+                    if attack_tmr % 30 == 0:
+                        speed_x = random.randint(5, 15)
+                        speed = [speed_x, 0]
+                        speed2 = [-speed_x, 0]
+                        sidedeny.add(SideDeny(speed, True))
+                        sidedeny.add(SideDeny(speed2))
+                    if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 2
+                            heart.invincible = True
+
                 """
                 クラスの更新を行う
                 """
@@ -1666,6 +1723,7 @@ def main():
                 sidebeamr.update(screen)
                 dream_egg.update(screen)
                 follow_bream.update(screen)
+                sidedeny.update(screen)
                 
                 if attack_tmr > 300: # 選択画面に戻る
                     """
@@ -1674,6 +1732,7 @@ def main():
                     dialog.update(screen, True)
                     # 初期化
                     heart = Heart((WIDTH/2, HEIGHT/2+100))
+                    # heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     rakutan.update(screen, True)
                     sidebeamr.update(screen, True)
                     sidebeamf.update(screen, True)
@@ -1682,6 +1741,7 @@ def main():
                     bound_beam.update(screen,True)
                     dream_egg.update(screen, True)
                     follow_bream.update(screen, True)
+                    sidedeny.update(screen, True)
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
