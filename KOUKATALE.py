@@ -1209,8 +1209,8 @@ class SideBeamFake(pg.sprite.Sprite):
         """
         super().__init__()
 
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
-        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 100))
+        self.image = pg.Surface((300, 60), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 0), (0, 0, 300, 60))
         self.image.fill((255, 255, 0, 100))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
@@ -1225,7 +1225,7 @@ class SideBeamFake(pg.sprite.Sprite):
         """
         self.tmr += 1
         screen.blit(self.image, self.rect)
-        if self.tmr == 20 or reset:
+        if self.tmr == 10 or reset:
             self.kill() 
 
 
@@ -1241,10 +1241,10 @@ class SideWallReal(pg.sprite.Sprite):
         super().__init__()
         self.genx = 0
         self.geny = 0
-        self.gengeny = 100
+        self.gengeny = 60
         self.pos = start_pos
 
-        self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        self.image = pg.Surface((300, 60), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
@@ -1258,13 +1258,13 @@ class SideWallReal(pg.sprite.Sprite):
         self.tmr += 1
         self.gengeny -= 3.0
         self.geny += 1.5
-        if 1 <= self.tmr < 21:
-            self.image = pg.Surface((300, 100), pg.SRCALPHA)
+        if 1 <= self.tmr < 11:
+            self.image = pg.Surface((300, 60), pg.SRCALPHA)
             pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
             self.rect = self.image.get_rect()
             self.rect.center = self.pos
             screen.blit(self.image, self.rect)
-        if self.tmr == 21 or reset:
+        if self.tmr == 11 or reset:
             self.kill() 
 
 
@@ -1603,7 +1603,7 @@ def main():
                     elif 30 < select_tmr:
                         atk = False
                         attack_bar.vx = +1
-                        attack_rand = 8#random.randint(0, attack_num)
+                        attack_rand = 3#random.randint(0, attack_num)
                         if attack_rand == 8:
                             heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                         else:
@@ -1710,11 +1710,11 @@ def main():
                     予告ビームと横からビームの作成
                     """
                     # 横からビームの発生
-                    if attack_tmr % 40 == 0:  # 一定時間ごとにビームを生成
-                        start_pos = (WIDTH/2, random.choice([HEIGHT/2, HEIGHT/2+100, HEIGHT/2+200]))
+                    if attack_tmr % 20 == 0:  # 一定時間ごとにビームを生成
+                        start_pos = (WIDTH/2, random.choice([HEIGHT/2-20, HEIGHT/2+40, HEIGHT/2+100, HEIGHT/2+160, HEIGHT/2+220]))
                         # 予告ビームの表示
                         sidebeamf.add(SideBeamFake(start_pos))
-                    elif attack_tmr % 40 == 39:
+                    elif attack_tmr % 20 == 19:
                         # 横からビームの表示
                         sidebeamr.add(SideWallReal(start_pos))
                     # ビームとの衝突判定
