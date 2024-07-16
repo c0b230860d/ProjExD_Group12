@@ -1671,23 +1671,22 @@ def main():
                     """
                     地雷原の作成
                     """
-                    if (attack_tmr + 1) % 30 == 0: # haiti
+                    if attack_tmr % 50 == 0:  # haiti
                         minefield.place_bombs()
-                    elif (attack_tmr + 1) % 30 == 21: # bakuha
+                    elif attack_tmr % 50 == 31:  # bakuha
                         explosion.create_explosions(minefield.bombs)
 
-                    if 0 <= (attack_tmr + 1) % 30 <= 22: # next
+                    if 0 <= attack_tmr % 50 <= 30:  # next
                         minefield.draw()
-                    else: 
+                    elif 31 <= attack_tmr % 50 <= 49: 
                         explosion.draw()
-                    
-                    if attack_tmr > 40:
-                        if pg.sprite.spritecollide(heart, explosion.explosions, False) and not heart.invincible:
-                            if hp.hp < 3:
-                                hp.hp = 0
-                            else:
-                                hp.hp -= 1
-                            heart.invincible = True
+                        if len(pg.sprite.spritecollide(heart, explosion.explosions, False)) != 0:
+                            if heart.invincible == False:
+                                if hp.hp < 3:
+                                    hp.hp = 0
+                                else:
+                                    hp.hp -= 1
+                                heart.invincible = True
                 
                 elif attack_rand == 5:
                     """
