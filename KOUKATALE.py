@@ -900,7 +900,7 @@ class Item:
             "＊　こうかとんエキス":15, 
             "＊　こうかとんジュース":15, 
             "＊　こうかとんエナジー":25, 
-            "＊　こうかとんドリンク":25,
+            "＊　こうかとんドリンク":30,
         }
         self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
         self.next = False
@@ -1543,7 +1543,7 @@ def main():
                     if select_tmr == 0:
                         attack_voice.play(0)
                     if select_tmr == 3:
-                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < select_tmr < 30:
                         en_hp.draw(screen, atk_value)
@@ -1618,14 +1618,14 @@ def main():
                     """
                     if attack_tmr == 0:
                         for _ in range(6):
-                            start_pos = (WIDTH//2,WIDTH//2)
+                            start_pos = (WIDTH//2,HEIGHT//2-35)
                             bound_beam.add(Bound_Beam((255,255,255),start_pos))
                     if len(pg.sprite.spritecollide(heart, bound_beam, False)) != 0:
                         if heart.invincible == False:
                             if hp.hp < 3:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 3
+                                hp.hp -= 2
                             heart.invincible = True
 
                 elif attack_rand == 2:
@@ -1679,7 +1679,7 @@ def main():
                     elif (attack_tmr + 1) % 30 == 21: # bakuha
                         explosion.create_explosions(minefield.bombs)
 
-                    if 0 <= (attack_tmr + 1) % 30 <= 20: # next
+                    if 0 <= (attack_tmr + 1) % 30 <= 22: # next
                         minefield.draw()
                     else: 
                         explosion.draw()
