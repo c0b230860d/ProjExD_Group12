@@ -283,24 +283,6 @@ class HeartGrav(pg.sprite.Sprite):
                     screen.blit(self.image, self.rect)
         else:
             screen.blit(self.image, self.rect)
-        
-    # def check_bound2(obj_rct:pg.Rect) -> tuple[bool, bool]:
-    #     """
-    #     引数:ハートRect
-    #     戻り値:タプル(横方向判定結果, 縦方向判定結果)
-    #     行動範囲内ならTrue, 行動範囲外ならFalseを返す
-    #     """
-    #     yoko, tate = True, True
-    #     if obj_rct.left < WIDTH/2-150+5 or WIDTH/2+150-5 < obj_rct.right:  # 横判定
-    #         yoko = False
-    #     if obj_rct.top < HEIGHT/2-50+5 or (HEIGHT/2-50)+300-5 < obj_rct.bottom:  # 縦判定
-    #         tate = False
-    #     return yoko, tate
-    
-    # def check_bound_grav(heart_rct:pg.Rect, obj_rct:pg.Rect) -> tuple[bool, bool]:
-    #     yoko, tate = True, True
-    #     if obj_rct:
-    #         if heart_rct.left < obj_rct.right or heart_rct.right > 
 
 
 class HealthBar:
