@@ -989,7 +989,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 3  # 攻撃の種類に関する変数
+    attack_num = 2  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
 
@@ -1238,16 +1238,16 @@ def main():
                                 hp.hp -= 3
                             heart.invincible = True
 
-                elif attack_rand == 3:
+                elif attack_rand == 2:
                     """
                     以下に各自攻撃の処理を行う
                     """
                     # print(1)
-                    if attack_tmr % 15 == 0:
+                    if attack_tmr % 10 == 0:
                         start_pos2 = (0,random.randint(HEIGHT/2-50,HEIGHT/2+250))
                         speed = (+20, 0)
                         beamw.add(Beam((255, 255, 255), start_pos2, speed))
-                    if attack_tmr % 15 == 0:
+                    if attack_tmr % 10 == 0:
                         speed = (0, +20)
                         start_pos2 = (random.randint(WIDTH/2-150,WIDTH/2+150),0)
                         beamh.add(Beam((255, 255, 255), start_pos2,speed,True))
