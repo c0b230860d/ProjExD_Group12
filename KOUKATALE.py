@@ -6,6 +6,7 @@ import pygame.mixer
 import time
 import random
 import math
+import random
 
 """
 以下、複数個のクラス等で参照回数が多いかつ、値の変化がないものを
@@ -884,6 +885,48 @@ class AttackRakutan(pg.sprite.Sprite):
 """
 うえの例をもとに以下にこうかとんが攻撃する内容についてのクラスを各自用意する
 """
+# AttackMinefieldクラスの定義
+class Minefield(pg.sprite.Sprite):
+    BLACK = (0, 0, 0)
+    WHITE = (255, 255, 255)
+
+    def __init__(self, screen):
+        super().__init__()
+        self.screen = screen
+        self.bombs = pg.sprite.Group()
+
+    def place_bombs(self):
+        self.bombs.empty()
+        num_bombs = random.randint(5, 8)
+        for _ in range(num_bombs):
+            x = random.randint(int(WIDTH / 2 - 150 + 5), int(WIDTH / 2 + 150 - 5))
+            y = random.randint(int(HEIGHT / 2 - 50 + 5), int(HEIGHT / 2 - 50 + 300 - 5))
+            bomb = pg.sprite.Sprite()
+            bomb.rect = pg.Rect(x, y, 10, 10)
+            self.bombs.add(bomb)
+
+    def draw(self):
+        for bomb in self.bombs:
+            pg.draw.rect(self.screen, self.WHITE, bomb.rect)
+
+class Explosion(pg.sprite.Sprite):
+    EXPLOSION_COLOR = (194, 0, 0)
+
+    def __init__(self, screen):
+        super().__init__()
+        self.screen = screen
+        self.explosions = pg.sprite.Group()
+
+    def create_explosions(self, bombs):
+        self.explosions.empty()
+        for bomb in bombs:
+            explosion = pg.sprite.Sprite()
+            explosion.rect = pg.Rect(bomb.rect.centerx - 30, bomb.rect.centery - 30, 60, 60)
+            self.explosions.add(explosion)
+
+    def draw(self):
+        for explosion in self.explosions:
+            pg.draw.circle(self.screen, self.EXPLOSION_COLOR, explosion.rect.center, 30)
 
 
 class SideBeamFake(pg.sprite.Sprite):
@@ -1176,6 +1219,10 @@ def main():
 
     # これ以下に攻撃のクラスを初期化する
     rakutan = pg.sprite.Group()
+    
+    # AttackMinefieldのグループ
+    minefield = Minefield(screen)
+    explosion = Explosion(screen)
     sidebeamr = pg.sprite.Group()
     sidebeamf = pg.sprite.Group()
     beamw = pg.sprite.Group()
@@ -1201,7 +1248,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 3  # 攻撃の種類に関する変数
+    attack_num = 4  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
 
@@ -1507,6 +1554,26 @@ def main():
                             else:
                                 hp.hp -= 4
                             heart.invincible = True
+                
+                elif attack_rand == 4:
+                    if (attack_tmr + 1) % 30 == 0: # haiti
+                        minefield.place_bombs()
+                    elif (attack_tmr + 1) % 30 == 21: # bakuha
+                        explosion.create_explosions(minefield.bombs)
+
+                    if 0 <= (attack_tmr + 1) % 30 <= 20: # next
+                        minefield.draw()
+                    else: 
+                        explosion.draw()
+                    
+                    if attack_tmr > 40:
+                        if pg.sprite.spritecollide(heart, explosion.explosions, False) and not heart.invincible:
+                            if hp.hp < 3:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 3
+                            heart.invincible = True
+                
                 """
                 クラスの更新を行う
                 """
