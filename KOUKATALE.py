@@ -1250,12 +1250,15 @@ class Beam(pg.sprite.Sprite):
 
 
 class SideDeny(pg.sprite.Sprite):
+    """
+    ジャンプでよけるビームのクラス
+    """
     def __init__(self, speed: list[int, int], left=False):
         super().__init__()
         self.genx = 0
         self.geny = 0
         self.gengeny = 100
-        
+
         if left:
             self.pos = (100, HEIGHT/2+225)
         else:
@@ -1270,6 +1273,7 @@ class SideDeny(pg.sprite.Sprite):
     def update(self, screen: pg.Surface, reset=False):
         """
         引数1 screen：画面Surface
+        引数2 reset：リセット用
         """
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
@@ -1418,7 +1422,7 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
-                attack_rand = 8#random.randint(0, attack_num)
+                attack_rand = random.randint(0, attack_num)
                 if attack_rand == 8:
                     heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                 else:
