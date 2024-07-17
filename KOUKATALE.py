@@ -1250,32 +1250,30 @@ class Beam(pg.sprite.Sprite):
 
 
 class SideDeny(pg.sprite.Sprite):
+    """
+    ジャンプでよけるビームのクラス
+    """
     def __init__(self, speed: list[int, int], left=False):
         super().__init__()
+        self.genx = 0
+        self.geny = 0
+        self.gengeny = 100
+
         if left:
-            self.genx = 0
-            self.geny = 0
-            self.gengeny = 100
             self.pos = (100, HEIGHT/2+225)
-            self.image = pg.Surface((20, 50), pg.SRCALPHA)
-            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
-            self.rect = self.image.get_rect()
-            self.rect.center = self.pos
-            self.vx, self.vy = speed
         else:
-            self.genx = 0
-            self.geny = 0
-            self.gengeny = 100
             self.pos = (WIDTH-100, HEIGHT/2+225)
-            self.image = pg.Surface((20, 50), pg.SRCALPHA)
-            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
-            self.rect = self.image.get_rect()
-            self.rect.center = self.pos
-            self.vx, self.vy = speed
+        
+        self.image = pg.Surface((20, 50), pg.SRCALPHA)
+        pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+        self.rect = self.image.get_rect()
+        self.rect.center = self.pos
+        self.vx, self.vy = speed
 
     def update(self, screen: pg.Surface, reset=False):
         """
         引数1 screen：画面Surface
+        引数2 reset：リセット用
         """
         self.rect.move_ip(self.vx, self.vy)
         screen.blit(self.image, self.rect)
