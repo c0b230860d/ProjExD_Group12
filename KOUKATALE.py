@@ -195,7 +195,7 @@ class HeartGrav(pg.sprite.Sprite):
     プレイヤー（ハート）に関するクラス
     """
     img = pg.transform.rotozoom(
-        pg.image.load("fig/Undertale_hurt.png"), 
+        pg.image.load("fig/Undertale_hurt_blue.png"), 
         0, 0.02
         )
 
@@ -961,9 +961,8 @@ class AttackRakutan(pg.sprite.Sprite):
         screen.blit(self.label, self.frct)
         if check_bound1(self.rect) != (True, True) or reset:
             self.kill()  
-"""
-うえの例をもとに以下にこうかとんが攻撃する内容についてのクラスを各自用意する
-"""
+
+
 class DreamEgg(pg.sprite.Sprite):
     """
     こうかとんの卵攻撃に関するクラス
@@ -1013,6 +1012,10 @@ class FollowingBeam(pg.sprite.Sprite):
     """
     追従するビームに関するクラス
     """
+    img = pg.transform.rotozoom(
+        pg.image.load("fig/kataken.png"),
+        0,1.0
+    )
     def __init__(self, heart: "Heart", start_pos: tuple[int, int], angle = 0, follow = False):
         """
         ビームの初期化
@@ -1023,8 +1026,9 @@ class FollowingBeam(pg.sprite.Sprite):
         super().__init__()
 
         # ビームの四角形を描画
-        self.image = pg.Surface((100, 30))
-        pg.draw.rect(self.image, (255, 255, 255), (0, 0, 100, 30))
+        # self.image = pg.Surface((100, 30))
+        # pg.draw.rect(self.image, (255, 255, 255), (0, 0, 100, 30))
+        self.image = __class__.img
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.center = start_pos
@@ -1045,6 +1049,7 @@ class FollowingBeam(pg.sprite.Sprite):
 
         # イメージの向きの設定
         self.image = pg.transform.rotate(self.image, angle)
+        self.image.set_colorkey((0, 0, 0))
 
         # 時間
         self.tmr = 0
@@ -1501,13 +1506,6 @@ def main():
                 攻撃の描画やあたり判定などはここで行うこと
                 """
                 pg.draw.rect(screen,(255,255,255), Rect(WIDTH/2-150, HEIGHT/2-50, 300, 300), 5)
-                if hp.hp <= 0:
-                    """
-                    hpが0になったらゲームオーバー画面へと変更するようにしている
-                    """
-                    sound.stop()
-                    breakheart = BreakHeart(heart.rect.x, heart.rect.y)
-                    scenechange = 2
 
                 if no_attack and attack_tmr < 75:  # 平和end用
                     if no_attack_num == end_judg//2:
@@ -1687,6 +1685,9 @@ def main():
                                     heart.invincible = True
 
                 elif attack_rand == 8:
+                    """
+                    重力ありの攻撃
+                    """
                     if attack_tmr % 30 == 0:
                         speed_x = random.randint(5, 15)
                         speed = [speed_x, 0]
@@ -1722,6 +1723,14 @@ def main():
                 dream_egg.update(screen)
                 follow_bream.update(screen)
                 sidedeny.update(screen)
+
+                if hp.hp <= 0:
+                    """
+                    hpが0になったらゲームオーバー画面へと変更するようにしている
+                    """
+                    sound.stop()
+                    breakheart = BreakHeart(heart.rect.x, heart.rect.y)
+                    scenechange = 2
                 
                 if attack_tmr > 300: # 選択画面に戻る
                     """
