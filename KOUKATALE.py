@@ -1014,7 +1014,7 @@ class FollowingBeam(pg.sprite.Sprite):
     """
     img = pg.transform.rotozoom(
         pg.image.load("fig/kataken.png"),
-        0,1.0
+        0,1.2
     )
     def __init__(self, heart: "Heart", start_pos: tuple[int, int], angle = 0, follow = False):
         """
