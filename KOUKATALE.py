@@ -867,7 +867,7 @@ class Talk:
 
         self.voice = pg.mixer.Sound("./voice/sanzu_voice.wav")
 
-    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int):
+    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int = 200):
         """
         セリフを表示する
         引数1 screen：画面Surface
@@ -1420,7 +1420,9 @@ def main():
     pg.mixer.init()
     select_voice = pg.mixer.Sound("./voice/snd_select.wav")
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
+    gameov_sound = pg.mixer.Sound("./sound/gameover.mp3")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
+    sound.set_volume(0.3)
     """
     その他必要な初期化
     """
@@ -1487,15 +1489,15 @@ def main():
                                 select_voice.play(0)
                                 gameschange = 10
                 if select_tmr == 0:
-                    while True:
-                        attack_rand = random.randint(0, attack_num-1)
-                        if not attack_rand in nodup:
-                            nodup.append(attack_rand)
-                            # print(nodup)
-                            if len(nodup) == attack_num:
-                                nodup.clear()
-                            break
-                    # attack_rand = 9  # テスト用
+                    # while True:
+                    #     attack_rand = random.randint(0, attack_num-1)
+                    #     if not attack_rand in nodup:
+                    #         nodup.append(attack_rand)
+                    #         # print(nodup)
+                    #         if len(nodup) == attack_num:
+                    #             nodup.clear()
+                    #         break
+                    attack_rand = 10  # テスト用
                     if 9 <= attack_rand <= 10:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
@@ -1807,7 +1809,7 @@ def main():
                 elif attack_rand == 10:
                     """
                     重力あり
-                    噂の馬の銅像
+                    馬の銅像「飛躍」
                     """
                     if attack_tmr % 50 == 0:
                         horses.add(Horse())
@@ -1822,6 +1824,11 @@ def main():
                                         hp.hp -= 3
                                     heart.invincible = True
 
+                    if heart.invincible:
+                        lines = "退学"
+                        talk.update(screen,lines,len(lines))
+                    else:
+                        talk.index = 0
 
                 """
                 クラスの更新を行う
@@ -2107,13 +2114,12 @@ def main():
             if gameover_tmr < 50:
                 breakheart.update(screen)
             elif gameover_tmr == 50:
-                sound = pg.mixer.Sound("./sound/gameover.mp3")
-                sound.play(-1)
+                gameov_sound.play(-1)
             elif 50 < gameover_tmr:
                 gameov.update(screen)
             if gameover_tmr > 100 and restart:
                 # 怒涛の初期化
-                sound.stop()
+                gameov_sound.stop()
                 heart = Heart((WIDTH/2, HEIGHT/2+100))
                 rakutan.update(screen, True)
                 dream_egg.update(screen, True)
@@ -2140,7 +2146,6 @@ def main():
                     ]
                 choice_item = (AfterChoice(choice_item_lst))
                 gameov.update(screen, True)
-                sound = pg.mixer.Sound("./sound/Megalovania.mp3")
                 sound.play(-1)
                 talk.index = 0
                 no_attack: bool = True  # 一度でも攻撃したかどうか
