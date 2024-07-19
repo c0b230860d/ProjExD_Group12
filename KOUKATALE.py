@@ -16,7 +16,7 @@ import random
 WIDTH, HEIGHT = 1024, 768 # ディスプレイサイズ
 FONT = "font/JF-Dot-MPlusS10.ttf"  # ドット文字細目
 FONT_F = "font/JF-Dot-MPlusS10B.ttf"  # ドット文字太目
-GRAVITY = 0.75  #重力の大きさ。ジャンプした時に落ちる力。
+GRAVITY = 0.5  #重力の大きさ。ジャンプした時に落ちる力。
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -1286,6 +1286,55 @@ class SideDeny(pg.sprite.Sprite):
             self.kill()
     
 
+class Horse(pg.sprite.Sprite):
+    """
+    乗ったら退学と噂の馬銅像に関するクラス
+    """
+    def __init__(self):
+        """
+        アニメーションなどの初期設定
+        """
+        super().__init__()
+        self.images = [
+            pg.transform.rotozoom(pg.image.load("fig/horse1.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse2.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse3.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse4.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse5.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse6.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse7.png"), 0, 2.0),
+            pg.transform.rotozoom(pg.image.load("fig/horse8.png"), 0, 2.0),
+        ]
+        self.image_index = 0
+        self.image = self.images[self.image_index]
+        self.rect: pg.Rect = self.image.get_rect()
+        self.rect.center = WIDTH + self.image.get_width(), HEIGHT/2 + 250 - (self.image.get_height()/2)
+
+        self.frame_count = 0
+
+        self.vx = -10
+
+        self.tmr = 0
+
+    def update(self, screen: pg.Surface, reset=False):
+        """
+        こうかとんを表示
+        引数1 screen：画面サーファイス
+        引数2 reset：リセット判定
+        """
+        self.frame_count += 1
+        if self.frame_count % 2 == 0:  # フレームごとに切り替え速度を調整
+            self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
+
+        self.rect.move_ip(self.vx, 0)
+        screen.blit(self.image, self.rect)
+
+        if self.tmr >= 200 or reset:
+            self.kill()
+        self.tmr += 1
+
+
 def main():
     pg.display.set_caption("koukAtale")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -1348,6 +1397,7 @@ def main():
     beamh = pg.sprite.Group()    
     bound_beam = pg.sprite.Group()
     sidedeny = pg.sprite.Group()
+    horses = pg.sprite.Group()
     """
     以下それぞれのシーンのタイマーを用意
     もし用意したければここに追加してください
@@ -1367,7 +1417,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 9  # 攻撃の種類に関する変数
+    attack_num = 10  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1438,7 +1488,8 @@ def main():
                             if len(nodup) == attack_num:
                                 nodup.clear()
                             break
-                    if attack_rand == 8:
+                    # attack_rand = 9  # テスト用
+                    if 8 <= attack_rand <= 9:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
                         heart = Heart((WIDTH/2, HEIGHT/2+100))
@@ -1707,7 +1758,8 @@ def main():
 
                 elif attack_rand == 8:
                     """
-                    重力ありの攻撃
+                    重力あり
+                    両サイドからの障壁
                     """
                     if attack_tmr % 30 == 0:
                         speed_x = random.randint(5, 15)
@@ -1722,6 +1774,25 @@ def main():
                             else:
                                 hp.hp -= 2
                             heart.invincible = True
+
+                elif attack_rand == 9:
+                    """
+                    重力あり
+                    噂の馬の銅像
+                    """
+                    if attack_tmr % 30 == 0:
+                        horses.add(Horse())
+                        
+                    if len(pg.sprite.spritecollide(heart, horses, False)) != 0:
+                        for horse in horses:
+                            if pg.sprite.collide_mask(heart, horse):
+                                if heart.invincible == False:
+                                    if hp.hp < 3:
+                                        hp.hp = 0
+                                    else:
+                                        hp.hp -= 3
+                                    heart.invincible = True
+
 
                 """
                 クラスの更新を行う
@@ -1744,6 +1815,7 @@ def main():
                 dream_egg.update(screen)
                 follow_bream.update(screen)
                 sidedeny.update(screen)
+                horses.update(screen)
 
                 if hp.hp <= 0:
                     """
@@ -1770,6 +1842,7 @@ def main():
                     dream_egg.update(screen, True)
                     follow_bream.update(screen, True)
                     sidedeny.update(screen, True)
+                    horses.update(screen,True)
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
@@ -2023,6 +2096,7 @@ def main():
                 sidebeamr.update(screen, True)
                 sidebeamf.update(screen, True)
                 rakutan.update(screen, True)
+                horses.update(screen,True)
                 kkton.rect.centerx = WIDTH/2
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
