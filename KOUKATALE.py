@@ -1434,7 +1434,7 @@ def main():
                         attack_rand = random.randint(0, attack_num-1)
                         if not attack_rand in nodup:
                             nodup.append(attack_rand)
-                            print(nodup)
+                            # print(nodup)
                             if len(nodup) == attack_num:
                                 nodup.clear()
                             break
@@ -1593,9 +1593,19 @@ def main():
                     """
                     予告ビームと横からビームの作成
                     """
+                    if attack_tmr == 0:
+                        beam_nodup = []
                     # 横からビームの発生
                     if attack_tmr % 20 == 0:  # 一定時間ごとにビームを生成
-                        start_pos = (WIDTH/2, random.choice([HEIGHT/2-20, HEIGHT/2+40, HEIGHT/2+100, HEIGHT/2+160, HEIGHT/2+220]))
+                        ls = [HEIGHT/2-20, HEIGHT/2+40, HEIGHT/2+100, HEIGHT/2+160, HEIGHT/2+220]
+                        while True:
+                            pos_choice = random.randint(0, len(ls)-1)
+                            if not pos_choice in beam_nodup:
+                                beam_nodup.append(pos_choice)
+                                if len(beam_nodup) == len(ls):
+                                    beam_nodup.clear()
+                                break
+                        start_pos = (WIDTH/2, ls[pos_choice])
                         # 予告ビームの表示
                         sidebeamf.add(SideBeamFake(start_pos))
                     elif attack_tmr % 20 == 19:
