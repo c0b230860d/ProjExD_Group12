@@ -867,7 +867,7 @@ class Talk:
 
         self.voice = pg.mixer.Sound("./voice/sanzu_voice.wav")
 
-    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int = 200):
+    def update(self, screen: pg.Surface, lines: str, len:int, tmr:int):
         """
         セリフを表示する
         引数1 screen：画面Surface
@@ -1422,7 +1422,7 @@ def main():
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     gameov_sound = pg.mixer.Sound("./sound/gameover.mp3")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
-    sound.set_volume(0.3)
+    sound.set_volume(0.1)
     """
     その他必要な初期化
     """
@@ -1823,12 +1823,6 @@ def main():
                                     else:
                                         hp.hp -= 3
                                     heart.invincible = True
-
-                    if heart.invincible:
-                        lines = "退学"
-                        talk.update(screen,lines,len(lines))
-                    else:
-                        talk.index = 0
 
                 """
                 クラスの更新を行う
