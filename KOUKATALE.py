@@ -16,7 +16,7 @@ import random
 WIDTH, HEIGHT = 1024, 768 # ディスプレイサイズ
 FONT = "font/JF-Dot-MPlusS10.ttf"  # ドット文字細目
 FONT_F = "font/JF-Dot-MPlusS10B.ttf"  # ドット文字太目
-GRAVITY = 0.75  #重力の大きさ。ジャンプした時に落ちる力。
+GRAVITY = 0.80  #重力の大きさ。ジャンプした時に落ちる力。
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -246,7 +246,7 @@ class HeartGrav(pg.sprite.Sprite):
 
         if key_lst[pg.K_UP] and self.in_air == False:
             # Y軸方向の速度
-            self.vel_y = -11
+            self.vel_y = -15
 			# 空中フラグを更新
             self.in_air = True
             
@@ -1258,18 +1258,20 @@ class SideDeny(pg.sprite.Sprite):
     """
     ジャンプでよけるビームのクラス
     """
-    def __init__(self, speed: list[int, int], left=False):
+    def __init__(self, speed: list[int, int], left=False, tate_right=False):
         super().__init__()
         self.genx = 0
         self.geny = 0
         self.gengeny = 100
 
         if left:
-            self.pos = (100, HEIGHT/2+225)
+            self.pos = (100, HEIGHT/2+195)
+        elif tate_right:
+            self.pos = (WIDTH-100, HEIGHT/2-15)
         else:
-            self.pos = (WIDTH-100, HEIGHT/2+225)
+            self.pos = (WIDTH-100, HEIGHT/2+195)
         
-        self.image = pg.Surface((20, 50), pg.SRCALPHA)
+        self.image = pg.Surface((20, 100), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
@@ -1709,12 +1711,14 @@ def main():
                     """
                     重力ありの攻撃
                     """
-                    if attack_tmr % 30 == 0:
-                        speed_x = random.randint(5, 15)
+                    if attack_tmr % 40 == 0:
+                        speed_x = random.choice([5, 10, 11, 12])
+                        # speed_x = 4.5
                         speed = [speed_x, 0]
                         speed2 = [-speed_x, 0]
-                        sidedeny.add(SideDeny(speed, True))
-                        sidedeny.add(SideDeny(speed2))
+                        sidedeny.add(SideDeny(speed, left=True, tate_right=False))
+                        # sidedeny.add(SideDeny(speed2, left=False, tate_right=True))
+                        sidedeny.add(SideDeny(speed2, left=False, tate_right=False))
                     if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
                             if hp.hp < 2:
