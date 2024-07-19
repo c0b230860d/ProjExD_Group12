@@ -1562,7 +1562,7 @@ def main():
                             bound_beam.add(Bound_Beam((255,255,255),start_pos))
                     if len(pg.sprite.spritecollide(heart, bound_beam, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 3:
+                            if hp.hp < 2:
                                 hp.hp = 0
                             else:
                                 hp.hp -= 2
@@ -1583,7 +1583,7 @@ def main():
                     #ビームとの衝突判定
                     if len(pg.sprite.spritecollide(heart, beamw, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 3:
+                            if hp.hp < 2:
                                 hp.hp = 0
                             else:
                                 hp.hp -= 2
@@ -1619,7 +1619,7 @@ def main():
                                     if hp.hp < 4:
                                         hp.hp = 0
                                     else:
-                                        hp.hp -= 5
+                                        hp.hp -= 4
                                     heart.invincible = True
                 
                 elif attack_rand == 4:
@@ -1637,10 +1637,10 @@ def main():
                         explosion.draw()
                         if len(pg.sprite.spritecollide(heart, explosion.explosions, False)) != 0:
                             if heart.invincible == False:
-                                if hp.hp < 3:
+                                if hp.hp < 5:
                                     hp.hp = 0
                                 else:
-                                    hp.hp -= 1
+                                    hp.hp -= 5
                                 heart.invincible = True
                 
                 elif attack_rand == 5:
@@ -1652,7 +1652,7 @@ def main():
                         dream_egg.add(DreamEgg(kkton, heart))
                     if len(pg.sprite.spritecollide(heart, dream_egg, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 3:
+                            if hp.hp < 1:
                                 hp.hp = 0
                             else:
                                 hp.hp -= 1
@@ -1676,7 +1676,7 @@ def main():
                         for beam in follow_bream:
                             if pg.sprite.collide_mask(heart, beam):
                                 if heart.invincible == False:
-                                    if hp.hp < 3:
+                                    if hp.hp < 5:
                                         hp.hp = 0
                                     else:
                                         hp.hp -= 5
@@ -1699,7 +1699,7 @@ def main():
                         for beam in follow_bream:
                             if pg.sprite.collide_mask(heart, beam):
                                 if heart.invincible == False:
-                                    if hp.hp < 3:
+                                    if hp.hp < 2:
                                         hp.hp = 0
                                     else:
                                         hp.hp -= 2
@@ -1717,7 +1717,7 @@ def main():
                         sidedeny.add(SideDeny(speed2))
                     if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 3:
+                            if hp.hp < 2:
                                 hp.hp = 0
                             else:
                                 hp.hp -= 2
