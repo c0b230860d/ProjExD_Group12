@@ -16,7 +16,7 @@ import random
 WIDTH, HEIGHT = 1024, 768 # ディスプレイサイズ
 FONT = "font/JF-Dot-MPlusS10.ttf"  # ドット文字細目
 FONT_F = "font/JF-Dot-MPlusS10B.ttf"  # ドット文字太目
-GRAVITY = 0.5  #重力の大きさ。ジャンプした時に落ちる力。
+GRAVITY = 0.7  #重力の大きさ。ジャンプした時に落ちる力。
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -246,7 +246,7 @@ class HeartGrav(pg.sprite.Sprite):
 
         if key_lst[pg.K_UP] and self.in_air == False:
             # Y軸方向の速度
-            self.vel_y = -11
+            self.vel_y = -15
 			# 空中フラグを更新
             self.in_air = True
             
