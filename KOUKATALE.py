@@ -1354,6 +1354,7 @@ def main():
     """
     clock = pg.time.Clock()  # time
     select_tmr = 0  # 選択画面時のタイマーの初期値
+    attack_bar_tmr = 0  # アタックバー画面のタイマーの初期化
     attack_tmr = 0  # 攻撃中のタイマーの初期値
     gameover_tmr = 0  # gameover中のタイマー
     """
@@ -1366,7 +1367,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 8  # 攻撃の種類に関する変数
+    attack_num = 9  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1374,6 +1375,7 @@ def main():
     end_judg = 20  # 何回攻撃されたら見逃すかに関する変数
     restart = False # リスタート判定
     rand = 0
+    nodup = []  # 重複なしのランダム発生
 
     # ゲーム開始
     while True:
@@ -1427,11 +1429,19 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
-                attack_rand = random.randint(0, attack_num)
-                if attack_rand == 8:
-                    heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
-                else:
-                    heart = Heart((WIDTH/2, HEIGHT/2+100))
+                if select_tmr == 0:
+                    while True:
+                        attack_rand = random.randint(0, attack_num-1)
+                        if not attack_rand in nodup:
+                            nodup.append(attack_rand)
+                            print(nodup)
+                            if len(nodup) == attack_num:
+                                nodup.clear()
+                            break
+                    if attack_rand == 8:
+                        heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
+                    else:
+                        heart = Heart((WIDTH/2, HEIGHT/2+100))
                 attack_tmr = 0
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)  # 大枠を描画
                 kkton.update(screen)  # こうかとんを描画
@@ -1439,6 +1449,7 @@ def main():
                 hp.draw(screen)  # 残り体力を描画
                 hp.update()  # 残り体力を更新
                 choice.draw(screen)  # 選択肢の対か
+                select_tmr += 1
             
             elif gameschange == 1:  # 「こうげき」を選択した場合
                 # キー操作による状態遷移
@@ -1477,19 +1488,19 @@ def main():
                 if atk:  # atkが有効かされたら 
                     no_attack = False
                     attack_bar.stop()  # バーを止める
-                    if select_tmr == 0:
+                    if attack_bar_tmr == 0:
                         attack_voice.play(0)
-                    if select_tmr == 3:
+                    if attack_bar_tmr == 3:
                         atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
-                    elif 3 < select_tmr < 30:
+                    elif 3 < attack_bar_tmr < 30:
                         en_hp.draw(screen, atk_value)
                         en_hp.update()
-                    elif 30 < select_tmr:
+                    elif 30 < attack_bar_tmr:
                         atk = False
                         attack_bar.vx = +1
                         gameschange = 3
-                    select_tmr += 1
+                    attack_bar_tmr += 1
                 else:
                     attack_bar.move()  # バーを更新
                 attack_bar.draw(screen)  # バーを描画
@@ -1752,6 +1763,7 @@ def main():
                     kkton.rect.centerx = WIDTH/2
                     gameschange = 0
                     select_tmr = 0
+                    attack_bar_tmr = 0
                     talk.index = 0
                     no_attack_num += 1
                 attack_tmr += 1
@@ -2005,6 +2017,7 @@ def main():
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
                 gameover_tmr = 0
+                attack_bar_tmr = 0
                 select_tmr = 0
                 choice_item_lst = [
                     "＊　こうかとんエキス", 
