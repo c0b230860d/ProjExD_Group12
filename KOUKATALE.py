@@ -16,7 +16,7 @@ import random
 WIDTH, HEIGHT = 1024, 768 # ディスプレイサイズ
 FONT = "font/JF-Dot-MPlusS10.ttf"  # ドット文字細目
 FONT_F = "font/JF-Dot-MPlusS10B.ttf"  # ドット文字太目
-GRAVITY = 0.7  #重力の大きさ。ジャンプした時に落ちる力。
+GRAVITY = 0.80  #重力の大きさ。ジャンプした時に落ちる力。
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -1258,22 +1258,30 @@ class SideDeny(pg.sprite.Sprite):
     """
     ジャンプでよけるビームのクラス
     """
-    def __init__(self, speed: list[int, int], left=False):
+    def __init__(self, speed: list[int, int], left=False, tate_right=False):
         super().__init__()
         self.genx = 0
         self.geny = 0
-        self.gengeny = 100
+        self.gengeny = 200
 
         if left:
-            self.pos = (100, HEIGHT/2+225)
+            self.pos = (100, HEIGHT/2+195)
         else:
-            self.pos = (WIDTH-100, HEIGHT/2+225)
+            self.pos = (WIDTH-100, HEIGHT/2+195)
         
-        self.image = pg.Surface((20, 50), pg.SRCALPHA)
+        self.image = pg.Surface((20, 100), pg.SRCALPHA)
         pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.vx, self.vy = speed
+
+        if tate_right:
+            self.pos = (WIDTH-100, HEIGHT/2+50)
+            self.image = pg.Surface((20, 200), pg.SRCALPHA)
+            pg.draw.rect(self.image, (255, 255, 255), (self.genx, self.geny, 300, self.gengeny))
+            self.rect = self.image.get_rect()
+            self.rect.center = self.pos
+            self.vx, self.vy = speed
 
     def update(self, screen: pg.Surface, reset=False):
         """
@@ -1312,8 +1320,7 @@ class Horse(pg.sprite.Sprite):
 
         self.frame_count = 0
 
-        self.vx = -10
-
+        self.vx = -random.randint(8, 10)
         self.tmr = 0
 
     def update(self, screen: pg.Surface, reset=False):
@@ -1330,7 +1337,7 @@ class Horse(pg.sprite.Sprite):
         self.rect.move_ip(self.vx, 0)
         screen.blit(self.image, self.rect)
 
-        if self.tmr >= 200 or reset:
+        if self.tmr >= 350 or reset:
             self.kill()
         self.tmr += 1
 
@@ -1417,7 +1424,7 @@ def main():
     """
     その他必要な初期化
     """
-    attack_num = 10  # 攻撃の種類に関する変数
+    attack_num = 11  # 攻撃の種類に関する変数
     attack_rand = 0  # ランダムにこうかとんの攻撃を変えるための変数
     atk = False
     no_attack: bool = True  # 一度でも攻撃したかどうか
@@ -1489,7 +1496,7 @@ def main():
                                 nodup.clear()
                             break
                     # attack_rand = 9  # テスト用
-                    if 8 <= attack_rand <= 9:
+                    if 9 <= attack_rand <= 10:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
                         heart = Heart((WIDTH/2, HEIGHT/2+100))
@@ -1758,15 +1765,16 @@ def main():
 
                 elif attack_rand == 8:
                     """
-                    重力あり
-                    両サイドからの障壁
+                    上下からの障壁
                     """
                     if attack_tmr % 30 == 0:
-                        speed_x = random.randint(5, 15)
+                        # speed_x = random.choice([5, 10, 11, 12])
+                        speed_x = 5.5
                         speed = [speed_x, 0]
                         speed2 = [-speed_x, 0]
-                        sidedeny.add(SideDeny(speed, True))
-                        sidedeny.add(SideDeny(speed2))
+                        sidedeny.add(SideDeny(speed, left=True, tate_right=False))
+                        sidedeny.add(SideDeny(speed2, left=False, tate_right=True))
+                        # sidedeny.add(SideDeny(speed2, left=False, tate_right=False))
                     if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
                             if hp.hp < 2:
@@ -1778,9 +1786,30 @@ def main():
                 elif attack_rand == 9:
                     """
                     重力あり
+                    両サイドからの障壁
+                    """
+                    if attack_tmr % 35 == 0:
+                        speed_x = random.choice([5, 10, 11, 12])
+                        # speed_x = 4.5
+                        speed = [speed_x, 0]
+                        speed2 = [-speed_x, 0]
+                        sidedeny.add(SideDeny(speed, left=True, tate_right=False))
+                        # sidedeny.add(SideDeny(speed2, left=False, tate_right=True))
+                        sidedeny.add(SideDeny(speed2, left=False, tate_right=False))
+                    if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
+                        if heart.invincible == False:
+                            if hp.hp < 2:
+                                hp.hp = 0
+                            else:
+                                hp.hp -= 2
+                            heart.invincible = True
+
+                elif attack_rand == 10:
+                    """
+                    重力あり
                     噂の馬の銅像
                     """
-                    if attack_tmr % 30 == 0:
+                    if attack_tmr % 50 == 0:
                         horses.add(Horse())
                         
                     if len(pg.sprite.spritecollide(heart, horses, False)) != 0:
