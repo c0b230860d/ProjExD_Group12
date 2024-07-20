@@ -112,10 +112,11 @@ class Koukaton(pg.sprite.Sprite):
         self.next = True
         self.tmr = 0
 
-    def update(self, screen: pg.Surface):
+    def update(self, screen: pg.Surface, alph:bool = False):
         """
         こうかとんを表示
         引数1 screen：画面サーファイス
+        引数2 alpha：半透明にするかどうか
         """
         self.frame_count += 1
         if self.frame_count % 5 == 0 and self.next == True:  # フレームごとに切り替え速度を調整
@@ -128,7 +129,8 @@ class Koukaton(pg.sprite.Sprite):
             if self.tmr > 100:
                 self.next = True
                 self.tmr = 0
-            
+        if alph:
+            self.image.set_alpha(255//2)
             
         screen.blit(self.image, self.rect)
 
@@ -879,8 +881,10 @@ class Talk:
         screen.blit(self.img, self.rect)
         if self.index < len:
             if tmr % 2 == 0:
+                if lines[self.index] != ' ':
+                    self.voice.play(0)
                 self.index += 1
-                self.voice.play(0)
+                
 
         lines_list = lines[:self.index].split('\n')
         y_offset = 0
@@ -922,6 +926,77 @@ class Item:
         else:
             self.next = False
 
+
+class GameResult:
+    """
+    リザルト画面を表示するクラス
+    """
+    img = pg.transform.rotozoom(
+    pg.image.load("fig/KoukAtale_Title.png"), 
+    0, 1
+    ) 
+    def __init__(self, happy:bool = False, clear_time: int = 0, damage_count: int = 0, game_over_count: int = 0):
+        """
+        happy : ハッピーエンドかどうか
+        """
+        # タイトル画像
+        self.img = __class__.img
+        self.rect = self.img.get_rect()
+        self.rect.center = WIDTH/2, HEIGHT/2
+        # 文字
+        self.font = pg.font.Font(FONT, 40)
+        self.font1 = pg.font.Font(FONT, 50)
+        if happy:
+            self.txt = self.font.render("Ending: トリに願いを", True, (255, 255, 255))
+        else:
+            self.txt = self.font.render("Ending:トリ違い", True, (255, 255, 255))
+        self.txt_rect = self.txt.get_rect()
+        self.txt_rect.center = WIDTH/2, 2*HEIGHT/3
+        
+        # 結果情報
+        self.clear_time = clear_time
+        self.damage_count = damage_count
+        self.game_over_count = game_over_count
+
+        self.scroll_y = HEIGHT
+
+        # サウンド
+        self.titlenoise = pg.mixer.Sound("./voice/intronoise.wav")
+        # タイマー
+        self.tmr = 0
+
+        self.end = False
+
+    def update(self, screen: pg.Surface):
+        """
+        引数1 screen：画面Surface
+        """
+        screen.blit(self.img, self.rect)
+        if self.tmr == 0:
+            self.titlenoise.play(0)
+        elif self.tmr > 50:
+            screen.blit(self.txt, self.txt_rect)
+
+            if self.tmr > 100:
+                self.scroll_y -= 2
+
+                self.rect.move_ip(0, -2)
+                self.txt_rect.move_ip(0, -2)
+
+                clear_time_text = self.font.render(f"クリアタイム: {int(self.clear_time//60)}分{int(self.clear_time%60)}秒", True, (255, 255, 255))
+                damage_count_text = self.font.render(f"ダメージ回数: {self.damage_count}回", True, (255, 255, 255))
+                game_over_count_text = self.font.render(f"ゲームオーバー回数: {self.game_over_count}回", True, (255, 255, 255))
+                thankyou = self.font.render("Thank you for playing!", True, (255, 255, 255))
+                
+                screen.blit(clear_time_text, (WIDTH / 2 - clear_time_text.get_width() / 2, self.scroll_y))
+                screen.blit(damage_count_text, (WIDTH / 2 - damage_count_text.get_width() / 2, self.scroll_y + 50))
+                screen.blit(game_over_count_text, (WIDTH / 2 - game_over_count_text.get_width() / 2, self.scroll_y + 100))
+                screen.blit(thankyou, (WIDTH / 2 - game_over_count_text.get_width() / 2, self.scroll_y + 250))
+
+                if self.scroll_y+250 <= 0:
+                    self.end = True
+                    
+        self.tmr += 1
 
 """
 以下にこうかとんが攻撃する内容についてのクラスを用意する
@@ -1418,6 +1493,7 @@ def main():
     効果音やBGMの変数を用意
     """
     pg.mixer.init()
+    kkton_death_voice = pg.mixer.Sound("./voice/enemy_death.wav")
     select_voice = pg.mixer.Sound("./voice/snd_select.wav")
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     gameov_sound = pg.mixer.Sound("./sound/gameover.mp3")
@@ -1435,6 +1511,9 @@ def main():
     restart = False # リスタート判定
     rand = 0
     nodup = []  # 重複なしのランダム発生
+    start = time.time()
+    damage_cou = 0
+    gameov_cou = 0
 
     # ゲーム開始
     while True:
@@ -1493,7 +1572,7 @@ def main():
                         attack_rand = random.randint(0, attack_num-1)
                         if not attack_rand in nodup:
                             nodup.append(attack_rand)
-                            print(nodup)
+                            # print(nodup)
                             if len(nodup) == attack_num:
                                 nodup.clear()
                             break
@@ -1578,21 +1657,21 @@ def main():
                 """
                 pg.draw.rect(screen,(255,255,255), Rect(WIDTH/2-150, HEIGHT/2-50, 300, 300), 5)
 
-                if no_attack and attack_tmr < 75:  # 平和end用
+                if no_attack and attack_tmr < 80:  # 平和end用
                     if no_attack_num == end_judg//2:
-                        lines = "キミ、こうげきしてこないね"
+                        lines = "キミ こうげきしてこないね"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num == 2*end_judg//3:
-                        lines = "もしかして\nこうげきしなかったら\n単位もらえると思ってる？"
+                        lines = "もしかして \nこうげきしなかったら \n単位もらえると思ってる？"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num == 4*end_judg//5:
-                        lines = "ﾌﾌﾌ...\nキミ本当にやさしいね\nそろそろ僕もつかれてきたな"
+                        lines = "ﾌﾌﾌ... \nキミ本当にやさしいね \nやさしいひとは 久々だよ"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num == end_judg:
-                        lines = "わかったよ\nキミの願いをかなえてあげるよ\nまた遊ぼうね"
+                        lines = "わかった \nキミの願いをかなえてあげるよ \n単位とGPAでいいかな？"
                         talk.update(screen,lines,len(lines), attack_tmr)
                     elif no_attack_num > end_judg:
-                        lines = "何してるんだい？\n遊べて楽しかったよ\n早くお逃げ"
+                        lines = "終わりにしよう \nこのあらそいは \n早くお逃げ"
                         talk.update(screen,lines,len(lines), attack_tmr)
 
                 if attack_rand == 0:
@@ -1606,6 +1685,7 @@ def main():
                     # 落単との衝突判定
                     if len(pg.sprite.spritecollide(heart, rakutan, False)) != 0:
                         if heart.invincible == False:
+                            damage_cou += 1
                             if hp.hp < 3:
                                 hp.hp = 0
                             else:
@@ -1622,6 +1702,7 @@ def main():
                             bound_beam.add(Bound_Beam((255,255,255),start_pos))
                     if len(pg.sprite.spritecollide(heart, bound_beam, False)) != 0:
                         if heart.invincible == False:
+                            damage_cou += 1
                             if hp.hp < 2:
                                 hp.hp = 0
                             else:
@@ -1643,6 +1724,7 @@ def main():
                     #ビームとの衝突判定
                     if len(pg.sprite.spritecollide(heart, beamw, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
+                            damage_cou += 1
                             if hp.hp < 2:
                                 hp.hp = 0
                             else:
@@ -1676,6 +1758,7 @@ def main():
                         for beam in sidebeamr:
                             if pg.sprite.collide_mask(heart, beam):
                                 if heart.invincible == False:
+                                    damage_cou += 1
                                     if hp.hp < 4:
                                         hp.hp = 0
                                     else:
@@ -1697,10 +1780,11 @@ def main():
                         explosion.draw()
                         if len(pg.sprite.spritecollide(heart, explosion.explosions, False)) != 0:
                             if heart.invincible == False:
-                                if hp.hp < 5:
+                                damage_cou += 1
+                                if hp.hp < 6:
                                     hp.hp = 0
                                 else:
-                                    hp.hp -= 5
+                                    hp.hp -= 6
                                 heart.invincible = True
                 
                 elif attack_rand == 5:
@@ -1712,6 +1796,7 @@ def main():
                         dream_egg.add(DreamEgg(kkton, heart))
                     if len(pg.sprite.spritecollide(heart, dream_egg, False)) != 0:
                         if heart.invincible == False:
+                            damage_cou += 1
                             if hp.hp < 1:
                                 hp.hp = 0
                             else:
@@ -1736,6 +1821,7 @@ def main():
                         for beam in follow_bream:
                             if pg.sprite.collide_mask(heart, beam):
                                 if heart.invincible == False:
+                                    damage_cou += 1
                                     if hp.hp < 5:
                                         hp.hp = 0
                                     else:
@@ -1759,10 +1845,11 @@ def main():
                         for beam in follow_bream:
                             if pg.sprite.collide_mask(heart, beam):
                                 if heart.invincible == False:
-                                    if hp.hp < 2:
+                                    damage_cou += 1
+                                    if hp.hp < 3:
                                         hp.hp = 0
                                     else:
-                                        hp.hp -= 2
+                                        hp.hp -= 3
                                     heart.invincible = True
 
                 elif attack_rand == 8:
@@ -1779,6 +1866,7 @@ def main():
                         # sidedeny.add(SideDeny(speed2, left=False, tate_right=False))
                     if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
+                            damage_cou += 1
                             if hp.hp < 2:
                                 hp.hp = 0
                             else:
@@ -1800,10 +1888,11 @@ def main():
                         sidedeny.add(SideDeny(speed2, left=False, tate_right=False))
                     if len(pg.sprite.spritecollide(heart, sidedeny, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
                         if heart.invincible == False:
-                            if hp.hp < 2:
+                            damage_cou += 1
+                            if hp.hp < 4:
                                 hp.hp = 0
                             else:
-                                hp.hp -= 2
+                                hp.hp -= 4
                             heart.invincible = True
 
                 elif attack_rand == 10:
@@ -1818,10 +1907,11 @@ def main():
                         for horse in horses:
                             if pg.sprite.collide_mask(heart, horse):
                                 if heart.invincible == False:
-                                    if hp.hp < 3:
+                                    damage_cou += 1
+                                    if hp.hp < 7:
                                         hp.hp = 0
                                     else:
-                                        hp.hp -= 3
+                                        hp.hp -= 7
                                     heart.invincible = True
 
                 """
@@ -2066,6 +2156,7 @@ def main():
                 
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 if no_attack and no_attack_num > end_judg:
+                    kkton_death_voice.play(0)
                     gameschange = 12
                     sound.stop()
                 else:
@@ -2083,12 +2174,15 @@ def main():
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
                             select_voice.play(0)
-                            return
+                            end = time.time()
+                            clear_time = end-start
+                            gameresult = GameResult(True,clear_time=clear_time, damage_count=damage_cou, game_over_count=gameov_cou)
+                            scenechange = 4
 
                 pg.draw.rect(screen,(255,255,255), Rect(10, HEIGHT/2-50, WIDTH-20, 300), 5)
                 afterchoice = AfterChoice(["＊　YOU WIN !", "＊　GPAと単位を かくとく！"])
                 afterchoice.draw(screen, True)
-                kkton.update(screen)  # こうかとんの表示
+                kkton.update(screen, True)  # こうかとんの表示
                 hp.draw(screen)
                 choice.draw(screen)
 
@@ -2104,6 +2198,8 @@ def main():
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
                             restart = True
+            if gameover_tmr == 0:
+                gameov_cou += 1
 
             if gameover_tmr < 50:
                 breakheart.update(screen)
@@ -2161,7 +2257,19 @@ def main():
             gameend_atk.update(screen)
             hp.draw(screen)
             if gameend_atk.gameend:
+                end = time.time()
+                clear_time = end-start
+                gameresult = GameResult(clear_time=clear_time, damage_count=damage_cou, game_over_count=gameov_cou)
+                scenechange = 4
+            
+        elif scenechange == 4:  # ゲームリザルト画面
+            for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        return
+            gameresult.update(screen)
+            if gameresult.end:
                 return
+                
                 
         pg.display.update()
         clock.tick(30)
