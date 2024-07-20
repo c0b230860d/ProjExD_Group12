@@ -1493,7 +1493,7 @@ def main():
                         attack_rand = random.randint(0, attack_num-1)
                         if not attack_rand in nodup:
                             nodup.append(attack_rand)
-                            # print(nodup)
+                            print(nodup)
                             if len(nodup) == attack_num:
                                 nodup.clear()
                             break
