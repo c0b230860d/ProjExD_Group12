@@ -85,31 +85,51 @@ class Koukaton(pg.sprite.Sprite):
     """
     こうかとん表示に関するクラス
     """
-    # img = pg.transform.rotozoom(
-    #     pg.image.load("fig/dot_kk_negate.png"),
-    #     0,1.5
-    # )
     def __init__(self):
         """
         こうかとん画像Surfaceを生成する
         """
         super().__init__()
         self.images = [
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate4.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate3.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate2.png"), 0, 1.5),
-            pg.transform.rotozoom(pg.image.load("fig/dot_kk_negate.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk1.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk4.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk5.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk6.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk7.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk8.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk9.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk10.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk11.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk12.png"), 0, 1.5),
+        ]
+        self.images2 = [
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk1.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk4.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk5-1.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk6-2.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk7-3.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk8-4.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk9-5.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk10.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk11.png"), 0, 1.5),
+            pg.transform.rotozoom(pg.image.load("fig/dot_kk12.png"), 0, 1.5),
         ]
         self.image_index = 0
         self.image = self.images[self.image_index]
+        self.image2 = self.images2[self.image_index]
         # self.image = __class__.img
         self.rect: pg.Rect = self.image.get_rect()
+        self.rect2: pg.Rect = self.image2.get_rect()
         self.rect.center = WIDTH/2, HEIGHT/4+30
+        self.rect2.center = WIDTH/2, HEIGHT/4+30
+
         self.frame_count = 0
-        self.next = True
+        self.blink_num = 0
+        self.blink = False
         self.tmr = 0
 
     def update(self, screen: pg.Surface, alph:bool = False):
@@ -119,16 +139,19 @@ class Koukaton(pg.sprite.Sprite):
         引数2 alpha：半透明にするかどうか
         """
         self.frame_count += 1
-        if self.frame_count % 5 == 0 and self.next == True:  # フレームごとに切り替え速度を調整
+        if self.frame_count % 3 == 0 and not self.blink:
             self.image_index = (self.image_index + 1) % len(self.images)
             self.image = self.images[self.image_index]
             if self.image_index == len(self.images)-1:
-                self.next = False
-        else:
-            self.tmr += 1
-            if self.tmr > 100:
-                self.next = True
-                self.tmr = 0
+                self.blink_num += 1
+                if self.blink_num % 3 == 0:
+                    self.blink = True
+        elif self.frame_count % 3 == 0 and self.blink:
+            self.image_index = (self.image_index + 1) % len(self.images2)
+            self.image = self.images2[self.image_index]
+            if self.image_index == len(self.images2)-1:
+                self.blink = False
+
         if alph:
             self.image.set_alpha(255//2)
             
@@ -901,10 +924,10 @@ class Item:
     """
     def __init__(self):
         self.dic = {
-            "＊　こうかとんエキス":15, 
-            "＊　こうかとんジュース":15, 
-            "＊　こうかとんエナジー":25, 
-            "＊　こうかとんドリンク":30,
+            "＊　こうかとんエキス":10, 
+            "＊　こうかとんジュース":10, 
+            "＊　こうかとんエナジー":20, 
+            "＊　こうかとんドリンク":25,
         }
         self.cure_voice = pg.mixer.Sound("./voice/cure.wav")
         self.next = False
