@@ -393,10 +393,13 @@ class EnemyHealthBar:
         引数1 screen：画面Surface
         引数2 dmg：ダメージ量
         """
-        pg.draw.rect(screen, (0, 0, 0), self.frame)
-        pg.draw.rect(screen, (100, 100, 100), self.bar)
-        pg.draw.rect(screen, (0, 255, 0), self.value)
-        label1 = self.font1.render(f"{dmg}", True, (0, 0, 0), (255, 0, 0))
+        if dmg == 0:
+            label1 = self.font1.render("Miss",True,(255,255,255),(0, 0, 0))
+        else:
+            pg.draw.rect(screen, (0, 0, 0), self.frame)
+            pg.draw.rect(screen, (100, 100, 100), self.bar)
+            pg.draw.rect(screen, (0, 255, 0), self.value)
+            label1 = self.font1.render(f"{dmg}", True, (0, 0, 0), (255, 0, 0))
         rect1 = label1.get_rect()
         rect1.center = WIDTH/2-50, self.y - 50
         screen.blit(label1, rect1.center)
@@ -1653,13 +1656,19 @@ def main():
                     if attack_bar_tmr == 0:
                         attack_voice.play(0)
                     if attack_bar_tmr == 3:
-                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
-                        en_hp.hp -= atk_value  # 敵の体力から減らす
+                        if random.random() < 0.10:  #10%の確率でミスをする
+                            atk_value = 0
+                        else:
+                            atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                            en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < attack_bar_tmr < 30:
+                        if atk_value == 0:
+                            kkton.rect.centerx = math.sin(-math.pi*(attack_bar_tmr-3)/26)*125+WIDTH/2
                         en_hp.draw(screen, atk_value)
                         en_hp.update()
                     elif 30 < attack_bar_tmr:
                         atk = False
+                        # kkton.rect.centerx = WIDTH/2
                         attack_bar.vx = +1
                         gameschange = 3
                     attack_bar_tmr += 1
