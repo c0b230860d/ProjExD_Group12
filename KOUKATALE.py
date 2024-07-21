@@ -1521,7 +1521,7 @@ def main():
     attack_voice = pg.mixer.Sound("./voice/attack.wav")
     gameov_sound = pg.mixer.Sound("./sound/gameover.mp3")
     sound = pg.mixer.Sound("./sound/Megalovania.mp3")
-    sound.set_volume(0.1)
+    sound.set_volume(0.2)
     """
     その他必要な初期化
     """
@@ -1653,7 +1653,7 @@ def main():
                     if attack_bar_tmr == 0:
                         attack_voice.play(0)
                     if attack_bar_tmr == 3:
-                        atk_value = 500 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                        atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                         en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < attack_bar_tmr < 30:
                         en_hp.draw(screen, atk_value)
