@@ -1610,7 +1610,7 @@ def main():
                     if attack_rand % attack_num == 0:
                         attack_rand = 0
                     
-                    print(attack_rand)
+                    # print(attack_rand)
                     if 9 <= attack_rand <= 10:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
