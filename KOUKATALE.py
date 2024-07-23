@@ -1089,7 +1089,7 @@ class DreamEgg(pg.sprite.Sprite):
         self.rect.centery = kkton.rect.centery+kkton.rect.height//2-40
         
         # 場所と向きの設定
-        kkton.rect.x = random.randint(WIDTH/2-50, WIDTH/2+50)
+        kkton.rect.x = random.randint(WIDTH//2-50, WIDTH//2+50)
         self.vx, self.vy = calc_orientation(kkton.rect, heart.rect)
         angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle
         self.vx = math.cos(math.radians(angle))
