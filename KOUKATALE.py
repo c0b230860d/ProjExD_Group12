@@ -1540,6 +1540,7 @@ def main():
     start = time.time()
     damage_cou = 0
     gameov_cou = 0
+    MAXATTACK = False
 
     # ゲーム開始
     while True:
@@ -1650,7 +1651,11 @@ def main():
                         return
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_RETURN:
-                                atk = True
+                            atk = True
+                        elif event.key == pg.K_BACKSPACE:
+                            atk = True
+                            MAXATTACK = True
+
 
                 if en_hp.hp <= 0: # 敵の体力が0になったら
                     sound.stop()
@@ -1667,7 +1672,10 @@ def main():
                         if random.random() < 0.10:  #10%の確率でミスをする
                             atk_value = 0
                         else:
-                            atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
+                            if MAXATTACK:
+                                atk_value = 5000
+                            else:
+                                atk_value = 450 - int(abs((WIDTH/2-attack_bar.rect.centerx)/1.5))
                             en_hp.hp -= atk_value  # 敵の体力から減らす
                     elif 3 < attack_bar_tmr < 30:
                         if atk_value == 0:
