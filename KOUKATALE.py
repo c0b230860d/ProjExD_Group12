@@ -1594,15 +1594,15 @@ def main():
                                 select_voice.play(0)
                                 gameschange = 10
                 if select_tmr == 0:
-                    while True:
-                        attack_rand = random.randint(0, attack_num-1)
-                        if not attack_rand in nodup:
-                            nodup.append(attack_rand)
-                            # print(nodup)
-                            if len(nodup) == attack_num:
-                                nodup.clear()
-                            break
-                    # attack_rand = 10  # テスト用
+                    # while True:
+                    #     attack_rand = random.randint(0, attack_num-1)
+                    #     if not attack_rand in nodup:
+                    #         nodup.append(attack_rand)
+                    #         # print(nodup)
+                    #         if len(nodup) == attack_num:
+                    #             nodup.clear()
+                    #         break
+                    attack_rand = 6  # テスト用
                     if 9 <= attack_rand <= 10:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
@@ -1801,22 +1801,22 @@ def main():
                     """
                     地雷原の作成
                     """
-                    if attack_tmr % 50 == 0:  # haiti
+                    if attack_tmr % 40 == 0:  # haiti
                         minefield.place_bombs()
-                    elif attack_tmr % 50 == 31:  # bakuha
+                    elif attack_tmr % 40 == 21:  # bakuha
                         explosion.create_explosions(minefield.bombs)
 
-                    if 0 <= attack_tmr % 50 <= 30:  # next
+                    if 0 <= attack_tmr % 40 <= 20:  # next
                         minefield.draw()
-                    elif 31 <= attack_tmr % 50 <= 49: 
+                    elif 21 <= attack_tmr % 40 <= 29: 
                         explosion.draw()
                         if len(pg.sprite.spritecollide(heart, explosion.explosions, False)) != 0:
                             if heart.invincible == False:
                                 damage_cou += 1
-                                if hp.hp < 6:
+                                if hp.hp < 4:
                                     hp.hp = 0
                                 else:
-                                    hp.hp -= 6
+                                    hp.hp -= 4
                                 heart.invincible = True
                 
                 elif attack_rand == 5:

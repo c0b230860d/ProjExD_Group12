@@ -87,4 +87,4 @@
 * 画面の切り替えはgameschange, scenechange変数で行う
 
 ### ゲームのスクショ
-![alt text](image-1.png)
+![alt text](image.png)
