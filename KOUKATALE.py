@@ -2270,6 +2270,7 @@ def main():
                 sidebeamf.update(screen, True)
                 rakutan.update(screen, True)
                 horses.update(screen,True)
+                sidedeny.update(screen,True)
                 kkton.rect.centerx = WIDTH/2
                 hp =HealthBar(WIDTH/4, 5*HEIGHT/6, max_hp+4, max_hp, gpa)
                 en_hp = EnemyHealthBar(WIDTH/2, HEIGHT/3, en_max_hp, en_max_hp)
