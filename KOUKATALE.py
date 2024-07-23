@@ -1183,8 +1183,8 @@ class Minefield(pg.sprite.Sprite):
         self.bombs.empty()
         num_bombs = random.randint(5, 8)
         for _ in range(num_bombs):
-            x = random.randint(int(WIDTH / 2 - 150 + 5), int(WIDTH / 2 + 150 - 5))
-            y = random.randint(int(HEIGHT / 2 - 50 + 5), int(HEIGHT / 2 - 50 + 300 - 5))
+            x = random.randint(int(WIDTH // 2 - 150 + 5), int(WIDTH // 2 + 150 - 5))
+            y = random.randint(int(HEIGHT // 2 - 50 + 5), int(HEIGHT // 2 - 50 + 300 - 5))
             bomb = pg.sprite.Sprite()
             bomb.rect = pg.Rect(x, y, 10, 10)
             self.bombs.add(bomb)
@@ -1712,7 +1712,7 @@ def main():
                     """
                     # 落単ビームの発生
                     if attack_tmr % 11 == 0:  # 一定時間ごとにビームを生成
-                        start_pos = (random.randint(WIDTH/2-100,WIDTH/2+100), 40)
+                        start_pos = (random.randint(WIDTH//2-100,WIDTH//2+100), 40)
                         rakutan.add(AttackRakutan((255, 255, 255), start_pos))
                     # 落単との衝突判定
                     if len(pg.sprite.spritecollide(heart, rakutan, False)) != 0:
@@ -1746,12 +1746,12 @@ def main():
                     上下左右ビームの作成
                     """
                     if attack_tmr % 10 == 0:
-                        start_pos2 = (0,random.randint(HEIGHT/2-50,HEIGHT/2+250))
+                        start_pos2 = (0,random.randint(HEIGHT//2-50,HEIGHT//2+250))
                         speed = (+20, 0)
                         beamw.add(Beam((255, 255, 255), start_pos2, speed))
                     if attack_tmr % 10 == 0:
                         speed = (0, +20)
-                        start_pos2 = (random.randint(WIDTH/2-150,WIDTH/2+150),0)
+                        start_pos2 = (random.randint(WIDTH//2-150,WIDTH//2+150),0)
                         beamh.add(Beam((255, 255, 255), start_pos2,speed,True))
                     #ビームとの衝突判定
                     if len(pg.sprite.spritecollide(heart, beamw, False)) != 0 or len(pg.sprite.spritecollide(heart, beamh, False)) != 0:
