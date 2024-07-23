@@ -1593,16 +1593,24 @@ def main():
                             elif choice.index == 3:  # みのがすを選択していたら
                                 select_voice.play(0)
                                 gameschange = 10
+                        elif event.key == pg.K_BACKSPACE:
+                            attack_rand -= 1
+                            gameschange = 3
                 if select_tmr == 0:
-                    while True:
-                        attack_rand = random.randint(0, attack_num-1)
-                        if not attack_rand in nodup:
-                            nodup.append(attack_rand)
-                            # print(nodup)
-                            if len(nodup) == attack_num:
-                                nodup.clear()
-                            break
+                    # while True:
+                    #     attack_rand = random.randint(0, attack_num-1)
+                    #     if not attack_rand in nodup:
+                    #         nodup.append(attack_rand)
+                    #         # print(nodup)
+                    #         if len(nodup) == attack_num:
+                    #             nodup.clear()
+                    #         break
                     # attack_rand = 10  # テスト用
+                    attack_rand += 1
+                    if attack_rand % attack_num == 0:
+                        attack_rand = 0
+                    
+                    print(attack_rand)
                     if 9 <= attack_rand <= 10:
                         heart = HeartGrav((WIDTH/2, HEIGHT/2+100))
                     else:
